@@ -8,10 +8,8 @@ public class IntcodeComputer {
 
 	private final List<Integer> opcodes;
 	
-	public IntcodeComputer(String opcodes) {
-		String[] values = opcodes.split(",");
-		List<String> valuesList = Arrays.asList(values);
-		this.opcodes = valuesList.stream().map(Integer::parseInt).collect(Collectors.toList());
+	public IntcodeComputer(String opcodesStr) {
+		this.opcodes = initialise(opcodesStr);
 	}
 
 	public void processOpcodes() throws UnknownOpcodeException {
@@ -34,8 +32,23 @@ public class IntcodeComputer {
 		opcodes.clear();
 	}
 	
+	public void reset(String opcodesStr) {
+		reset();
+		this.opcodes.addAll(initialise(opcodesStr));
+	}
+	
+	private List<Integer> initialise(String opcodes) {
+		String[] values = opcodes.split(",");
+		List<String> valuesList = Arrays.asList(values);
+		return valuesList.stream().map(Integer::parseInt).collect(Collectors.toList());
+	}
+	
 	public String getNounAndVerb() {
 		return String.format("%d", (opcodes.get(1) * 100) + opcodes.get(2));
+	}
+	
+	public String getNounAndVerb(int nounIndex, int verbIndex) {
+		return String.format("%d", (opcodes.get(nounIndex) * 100) + opcodes.get(verbIndex));
 	}
 	
 	private void parseInstructions() throws UnknownOpcodeException {
