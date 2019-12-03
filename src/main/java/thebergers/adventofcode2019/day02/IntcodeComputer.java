@@ -2,6 +2,7 @@ package thebergers.adventofcode2019.day02;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
 public class IntcodeComputer {
@@ -14,8 +15,19 @@ public class IntcodeComputer {
 		this.opcodes = valuesList.stream().map(Integer::parseInt).collect(Collectors.toList());
 	}
 
-	public String processOpcodes() throws UnknownOpcodeException {
+	public void processOpcodes() throws UnknownOpcodeException {
 		parseInstructions();
+	}
+
+	public void setCode(int index, Integer value) {
+		opcodes.set(index, value);
+	}
+
+	public Integer getPosition(int i) {
+		return opcodes.get(i);
+	}
+
+	public String getResult() {
 		return opcodes.stream().map(n -> n.toString()).collect(Collectors.joining(","));
 	}
 	

@@ -11,6 +11,9 @@ public class DayTwo {
 		String fileName = "./src/main/resources/daytwo/input.txt";
 		List<String> input = Utils.getDataFromFile(fileName);
 		IntcodeComputer intcodeComputer = new IntcodeComputer(input.get(0));
-		System.out.println(intcodeComputer.processOpcodes());
+		intcodeComputer.setCode(1, 12);
+		intcodeComputer.setCode(2, 2);
+		intcodeComputer.processOpcodes();
+		System.out.println(intcodeComputer.getPosition(0));
 	}
 }

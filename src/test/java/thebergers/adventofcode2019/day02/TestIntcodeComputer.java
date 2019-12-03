@@ -19,6 +19,7 @@ public class TestIntcodeComputer {
 	})
 	public void test(String input, String output) throws Exception {
 		IntcodeComputer ic = new IntcodeComputer(input);
-		assertThat(ic.processOpcodes()).as("Check output").isEqualTo(output);
+		ic.processOpcodes();
+		assertThat(ic.getResult()).as("Check output").isEqualTo(output);
 	}
 }
