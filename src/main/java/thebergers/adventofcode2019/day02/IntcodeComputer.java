@@ -2,7 +2,6 @@ package thebergers.adventofcode2019.day02;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
 public class IntcodeComputer {
@@ -31,24 +30,32 @@ public class IntcodeComputer {
 		return opcodes.stream().map(n -> n.toString()).collect(Collectors.joining(","));
 	}
 	
+	public void reset() {
+		opcodes.clear();
+	}
+	
+	public String getNounAndVerb() {
+		return String.format("%d", (opcodes.get(1) * 100) + opcodes.get(2));
+	}
+	
 	private void parseInstructions() throws UnknownOpcodeException {
-		int index = 0;
+		int instructionPointer = 0;
 		while (true) {
-			OpCode opcode = getNextOpcode(index);
+			OpCode opcode = getNextOpcode(instructionPointer);
 			if (null == opcode) {
-				throw new UnknownOpcodeException(index, opcodes.get(index));
+				throw new UnknownOpcodeException(instructionPointer, opcodes.get(instructionPointer));
 			}
 			if (opcode.equals(OpCode.TERMINATE)) {
 				return;
 			}
-			OpcodeOperation operation = getOperation(opcode, index);
-			operation.process();
-			index = getNextIndex(index);
+			Instruction instruction = getInstruction(opcode, instructionPointer);
+			instruction.process();
+			instructionPointer = getNextInstructionPointer(instructionPointer);
 		}
 	}
 	
-	private int getNextIndex(int index) {
-		return index + 4;
+	private int getNextInstructionPointer(int instructionPointer) {
+		return instructionPointer + 4;
 	}
 
 	enum OpCode {
@@ -80,11 +87,11 @@ public class IntcodeComputer {
 		}
 	}
 
-	abstract class OpcodeOperation {
+	abstract class Instruction {
 
-		protected final Integer operand1;
+		protected final Integer noun;
 		
-		protected final Integer operand2;
+		protected final Integer verb;
 		
 		protected final Integer resultPosition;
 		
@@ -96,49 +103,49 @@ public class IntcodeComputer {
 		protected abstract Integer calculate();
 		
 		
-		protected OpcodeOperation(int index) {
+		protected Instruction(int index) {
 			int operand1Index = opcodes.get(index + 1);
-			this.operand1 = opcodes.get(operand1Index);
+			this.noun = opcodes.get(operand1Index);
 			int operand2Index = opcodes.get(index + 2);
-			this.operand2 = opcodes.get(operand2Index);
+			this.verb = opcodes.get(operand2Index);
 			this.resultPosition = opcodes.get(index + 3);
 		}
 		
 	}
 	
-	OpcodeOperation getOperation(OpCode opcode, int index) throws UnknownOpcodeException {
+	Instruction getInstruction(OpCode opcode, int index) throws UnknownOpcodeException {
 		switch (opcode) {
 		case ADD:
-			return new AddOperation(index);
+			return new AddInstruction(index);
 		case MULTIPLY:
-			return new MultiplyOperation(index);
+			return new MultiplyInstruction(index);
 		default:
 			throw new UnknownOpcodeException(index, opcodes.get(index));
 		}
 	}
 
-	public class AddOperation extends OpcodeOperation {
+	public class AddInstruction extends Instruction {
 
-		public AddOperation(int index) {
+		public AddInstruction(int index) {
 			super(index);
 		}
 		
 		@Override
 		protected Integer calculate() {
-			return operand1 + operand2;
+			return noun + verb;
 		}
 
 	}
 
-	public class MultiplyOperation extends OpcodeOperation {
+	public class MultiplyInstruction extends Instruction {
 
-		public MultiplyOperation(int index) {
+		public MultiplyInstruction(int index) {
 			super(index);
 		}
 		
 		@Override
 		protected Integer calculate() {
-			return operand1 * operand2;
+			return noun * verb;
 		}
 
 	}

@@ -3,6 +3,7 @@ package thebergers.adventofcode2019.day02;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -21,5 +22,13 @@ public class TestIntcodeComputer {
 		IntcodeComputer ic = new IntcodeComputer(input);
 		ic.processOpcodes();
 		assertThat(ic.getResult()).as("Check output").isEqualTo(output);
+	}
+	
+	@DisplayName("Find noun and verb that comprise a result")
+	@Test
+	public void testGetNounAndVerb() {
+		String opcodes = "0,12,2,0,99";
+		IntcodeComputer ic = new IntcodeComputer(opcodes);
+		assertThat(ic.getNounAndVerb()).as("Check noun and verb").isEqualTo("1202");
 	}
 }
