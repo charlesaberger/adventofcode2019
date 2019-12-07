@@ -5,6 +5,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
@@ -21,9 +22,10 @@ public class TestDayThree {
 		ControlPanel controlPanel = new ControlPanel(testWires.getWires());
 		Point point = controlPanel.findClosestIntersection();
 		int distance = point.distanceFromOrigin();
-		int numberOfSteps = controlPanel.getMinimumNumSteps();
+		Optional<Integer> numberOfSteps = controlPanel.getMinimumNumSteps();
 		assertThat(distance).as("The distance is correct").isEqualTo(testWires.getExpectedDistance());
-		assertThat(numberOfSteps).as("The minimum number of steps is correct").isEqualTo(testWires.getExpectedSteps());
+		assertThat(numberOfSteps.isPresent()).as("The minimum number of steps is present").isTrue();
+		assertThat(numberOfSteps.get()).as("Number of steps is correct").isEqualTo(testWires.getExpectedSteps());
 	}
 	
 	static Stream<Arguments> generateTestWires() {
@@ -80,7 +82,8 @@ public class TestDayThree {
 		}
 		
 		public String toString() {
-			return String.format("wire1: %s, expectedDistance: %d", wires.get(0), expectedDistance);
+			return String.format("wire1: %s, expectedDistance: %d, expectedSteps: %d",
+					wires.get(0), expectedDistance, expectedSteps);
 		}
 	}
 }

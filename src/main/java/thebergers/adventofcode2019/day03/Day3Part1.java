@@ -2,6 +2,7 @@ package thebergers.adventofcode2019.day03;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import thebergers.adventofcode2019.utils.Utils;
 
@@ -13,6 +14,8 @@ public class Day3Part1 {
 		ControlPanel controlPanel = new ControlPanel(input);
 		Point point = controlPanel.findClosestIntersection();
 		int distance = point.distanceFromOrigin();
-		System.out.format("Result=%d", distance);
+		Optional<Integer> fewestSteps = controlPanel.getMinimumNumSteps();
+		Integer fewestStepsInt = fewestSteps.get();
+		System.out.format("distance=%d, fewestSteps=%d", distance, fewestStepsInt);
 	}
 }

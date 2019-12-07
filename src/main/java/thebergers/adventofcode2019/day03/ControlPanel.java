@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -11,8 +12,11 @@ public class ControlPanel {
 
 	private final List<Wire> wires;
 	
+	private final List<Point> intersections;
+	
 	public ControlPanel(List<String> wires) {
 		this.wires = generateWires(wires);
+		this.intersections = findIntersections();
 	}
 
 	private List<Wire> generateWires(List<String> wireStrings) {
@@ -23,7 +27,6 @@ public class ControlPanel {
 	}
 
 	public Point findClosestIntersection() {
-		List<Point> intersections = findIntersections();
 		return intersections
 		.stream()
 		.sorted((p1, p2) -> { return p1.distanceFromOrigin().compareTo(p2.distanceFromOrigin()); })
@@ -31,16 +34,16 @@ public class ControlPanel {
 		.get(0);
 	}
 	
-	public List<Point> findIntersections() {
-		Map<Point, List<UUID>> intersections = new HashMap<>();
+	private List<Point> findIntersections() {
+		Map<Point, List<UUID>> intersectionsMap = new HashMap<>();
 		for (Wire wire : wires) {
 			for (Point point : wire.getPoints()) {
 				if (point.getX().equals(0) && point.getY().equals(0)) {
 					continue;
 				}
 				List<UUID> uuids;
-				if (intersections.containsKey(point)) {
-					uuids = intersections.get(point);
+				if (intersectionsMap.containsKey(point)) {
+					uuids = intersectionsMap.get(point);
 				} else {
 					uuids = new LinkedList<>();
 				}
@@ -48,21 +51,45 @@ public class ControlPanel {
 				if (!uuids.contains(wireId)) {
 					uuids.add(wireId);
 				}
-				intersections.put(point, uuids);
+				intersectionsMap.put(point, uuids);
 			}
 		}
 		final List<Point> intersectionList = new LinkedList<>();
-		intersections.forEach((point, uuids) -> {
+		intersectionsMap.forEach((point, uuids) -> {
 			if (uuids.size() > 1) {
 				intersectionList.add(point);
 			}
 		});
 		return intersectionList;
 	}
+	
+	private Integer calculateTotalSteps(Point destination) {
+		Integer steps = 0;
+		for (Wire wire : wires) {
+			steps += calculateStepsToPoint(wire, destination);
+		}
+		return steps;
+	}
+	
+	private Integer calculateStepsToPoint(Wire wire, Point destination) {
+		Integer steps = 0;
+		for (Point point : wire.getPoints()) {
+			if (!point.isOrigin()) {
+				steps++;
+			}
+			if (point.equals(destination)) {
+				break;
+			}
+		}
+		return steps;
+	}
 
-	public int getMinimumNumSteps() {
-		// TODO Auto-generated method stub
-		return 0;
+	public Optional<Integer> getMinimumNumSteps() {
+		return intersections
+			.stream()
+			.map(p -> calculateTotalSteps(p))
+			.sorted()
+			.findFirst();
 	}
 
 }

@@ -32,6 +32,10 @@ public class Point {
 		return (x >= 0 ? x : x * -1) + (y >=0 ? y : y * -1);
 	}
 
+	public boolean isOrigin() {
+		return x.equals(0) && y.equals(0);
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
