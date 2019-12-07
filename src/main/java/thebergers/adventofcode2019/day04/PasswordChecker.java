@@ -28,7 +28,6 @@ public class PasswordChecker {
 		return 
 			IntStream.range(rangeStart, rangeEnd + 1)
 			.filter(password -> passwordValidator.validatePassword(password))
-			.peek(System.out::println)
 			.count();
 	}
 }

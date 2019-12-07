@@ -1,5 +1,7 @@
 package thebergers.adventofcode2019.day04;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class PasswordValidator {
@@ -45,11 +47,39 @@ public class PasswordValidator {
 		}
 		return true;
 	};
+
+	Predicate<Integer> checkGroupSizes = password -> {
+		char[] numbers = password.toString().toCharArray();
+		Map<Character, Integer> groupSizes = new HashMap<>();
+		groupSizes.put(Character.valueOf(numbers[0]), 1);
+		for (int i = 1; i < numbers.length; i++) {
+			Character currNumberChar = Character.valueOf(numbers[i]);
+			groupSizes.putIfAbsent(currNumberChar, 1);
+			Character prevNumberChar = Character.valueOf(numbers[i - 1]);
+			if (currNumberChar.equals(prevNumberChar)) {
+				Integer groupSize = groupSizes.get(currNumberChar);
+				groupSize++;
+				groupSizes.put(currNumberChar, groupSize);
+			}
+		}
+		boolean result = true;
+		for (Map.Entry<Character, Integer> entry : groupSizes.entrySet()) {
+			Integer groupSize = groupSizes.get(entry.getKey());
+			if (groupSize == 3 || groupSize == 5) {
+				result = false;
+				break;
+			}
+		}
+		System.out.format("password: %s, groupSizes: %s, result: %s\n",
+				password, groupSizes, result);
+		return result;
+	};
 	
 	Predicate<Integer> validations = 
 			checkLength
 			.and(withinRange)
 			.and(containsDoubleDigit)
-			.and(doesNotContainADecrease);
+			.and(doesNotContainADecrease)
+			.and(checkGroupSizes);
 
 }
