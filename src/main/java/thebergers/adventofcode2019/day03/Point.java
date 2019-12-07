@@ -1,14 +1,23 @@
 package thebergers.adventofcode2019.day03;
 
+import java.util.UUID;
+
 public class Point {
 
+	private final UUID wireId;
+	
 	private final Integer x;
 	
 	private final Integer y;
 	
-	public Point(Integer x, Integer y) {
+	public Point(UUID wireId, Integer x, Integer y) {
+		this.wireId = wireId;
 		this.x = x;
 		this.y = y;
+	}
+	
+	public UUID getWireId() {
+		return wireId;
 	}
 
 	public Integer getX() {
@@ -20,7 +29,7 @@ public class Point {
 	}
 	
 	public Integer distanceFromOrigin() {
-		return x + y;
+		return (x >= 0 ? x : x * -1) + (y >=0 ? y : y * -1);
 	}
 
 	@Override
