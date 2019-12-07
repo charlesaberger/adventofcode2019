@@ -60,4 +60,9 @@ public class ControlPanel {
 		return intersectionList;
 	}
 
+	public int getMinimumNumSteps() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

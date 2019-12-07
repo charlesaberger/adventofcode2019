@@ -21,7 +21,9 @@ public class TestDayThree {
 		ControlPanel controlPanel = new ControlPanel(testWires.getWires());
 		Point point = controlPanel.findClosestIntersection();
 		int distance = point.distanceFromOrigin();
+		int numberOfSteps = controlPanel.getMinimumNumSteps();
 		assertThat(distance).as("The distance is correct").isEqualTo(testWires.getExpectedDistance());
+		assertThat(numberOfSteps).as("The minimum number of steps is correct").isEqualTo(testWires.getExpectedSteps());
 	}
 	
 	static Stream<Arguments> generateTestWires() {
@@ -38,15 +40,15 @@ public class TestDayThree {
 			List<String> wiresList = new ArrayList<>();
 			wiresList.add("R8,U5,L5,D3");
 			wiresList.add("U7,R6,D4,L4");
-			testWires.add(new TestWires(wiresList, 6));
+			testWires.add(new TestWires(wiresList, 6, 30));
 			List<String> wiresList1 = new ArrayList<>();
 			wiresList1.add("R75,D30,R83,U83,L12,D49,R71,U7,L72");
 			wiresList1.add("U62,R66,U55,R34,D71,R55,D58,R83");
-			testWires.add(new TestWires(wiresList1, 159));
+			testWires.add(new TestWires(wiresList1, 159, 610));
 			List<String> wiresList2 = new ArrayList<>();
 			wiresList2.add("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51");
 			wiresList2.add("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7");
-			testWires.add(new TestWires(wiresList2, 135));
+			testWires.add(new TestWires(wiresList2, 135, 410));
 		}
 		
 		public static Stream<TestWires> getTestWiresStream() {
@@ -57,9 +59,12 @@ public class TestDayThree {
 
 		private final Integer expectedDistance;
 		
-		public TestWires(List<String> wires, Integer expectedDistance) {
+		private final Integer expectedSteps;
+		
+		public TestWires(List<String> wires, Integer expectedDistance, Integer expectedSteps) {
 			this.expectedDistance = expectedDistance;
 			this.wires = wires;
+			this.expectedSteps = expectedSteps;
 		}
 		
 		public List<String> getWires() {
@@ -68,6 +73,10 @@ public class TestDayThree {
 
 		public Integer getExpectedDistance() {
 			return expectedDistance;
+		}
+		
+		public Integer getExpectedSteps() {
+			return expectedSteps;
 		}
 		
 		public String toString() {
