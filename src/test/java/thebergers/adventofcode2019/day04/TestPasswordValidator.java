@@ -11,30 +11,30 @@ public class TestPasswordValidator {
 
 	private PasswordValidator pv;
 	
-	private static final String MIN_VALUE = "000001";
+	private static final Integer MIN_VALUE = 1;
 	
-	private static final String MAX_VALUE = "299999";
+	private static final Integer MAX_VALUE = 299999;
 	
 	@BeforeEach
 	public void setup() {
-		pv = new PasswordValidator(String.format("%s-%s", MIN_VALUE, MAX_VALUE));
+		pv = new PasswordValidator(MIN_VALUE, MAX_VALUE);
 	}
 	
 	@DisplayName("Password Validator")
-	@ParameterizedTest(name = "index= {}, input= {0}, expectedResult = {1}")
+	@ParameterizedTest(name = "{index}: description = {0}, input = {1}, expectedResult = {2}")
 	@CsvSource({
-		"000000,false",
-		"333333,false",
-		"123,false",
-		"1234567,false",
-		"111111,false",
-		"223450,false",
-		"123789,false",
-		"122345,true",
-		"111123,true",
-		"135679,true"
+		"Below range,000000,false",
+		"Beyond range, 333333,false",
+		"Too Short,123,false",
+		"Too Long,1234567,false",
+		"No Increases,111111,true",
+		"Contains a Decrease,223450,false",
+		"No double digit,123789,false",
+		"Valid1,122345,true",
+		"Valid2,111123,true",
+		"Valid3,133679,true"
 	})
-	public void testPasswordValidator(Integer password, boolean expectedResult) {
-		assertThat(pv.validatePassword(password)).as("Password {}", password).isEqualTo(expectedResult);
+	public void testPasswordValidator(String description, Integer password, boolean expectedResult) {
+		assertThat(pv.validatePassword(password)).as("Password %s", description).isEqualTo(expectedResult);
 	}
 }
