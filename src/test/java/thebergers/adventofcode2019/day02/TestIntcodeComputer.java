@@ -26,16 +26,28 @@ public class TestIntcodeComputer {
 		assertThat(ic.getResult()).as("Check output").isEqualTo(output);
 	}
 	
-	@DisplayName("Test Intcode computer add & multiply")
+	@DisplayName("Test Intcode computer input opcode")
 	@ParameterizedTest(name = "{index}: program => {0}, input => {1}, output => {2}")
 	@CsvSource({
-		"'3,1,101,1,1,0,99',4,'5,4,101,1,1,0,99'",
-		"'3,0,4,0,99',1,'1,0,4,0,99"
+		"'3,1,101,1,1,0,99',4,'5,4,101,1,1,0,99'"
 	})
-	public void testInputAndOutput(String program, Integer input, String result) {
+	public void testInput(String program, Integer input, String result) {
 		IntcodeComputer ic = new IntcodeComputer(program);
 		ic.processOpcodes(input);
 		assertThat(ic.getResult()).as("Check output").isEqualTo(result);
+	}
+	
+	@DisplayName("Test Intcode computer input opcode")
+	@ParameterizedTest(name = "{index}: program => {0}, input => {1}, output => {2}")
+	@CsvSource({
+		"'3,0,4,0,99',1,'1,0,4,0,99'"
+	})
+	public void testOutput(String program, Integer input, String result) {
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.enableTestMode();
+		ic.processOpcodes(input);
+		assertThat(ic.getResult()).as("Check result").isEqualTo(result);
+		assertThat(ic.getOutput()).as("Check output").isEqualTo(input);
 	}
 	
 	@DisplayName("Find noun and verb that comprise a result")

@@ -15,6 +15,10 @@ public class IntcodeComputer {
 	
 	private Optional<Integer> input;
 	
+	private Integer output;
+	
+	private boolean testMode = false;
+	
 	public IntcodeComputer(String opcodesStr) {
 		this.opcodes = initialise(opcodesStr);
 		this.instructionBuilder = new InstructionBuilder();
@@ -49,6 +53,21 @@ public class IntcodeComputer {
 	public void reset(String opcodesStr) {
 		reset();
 		this.opcodes.addAll(initialise(opcodesStr));
+	}
+	
+	public void enableTestMode() {
+		this.testMode = true;
+	}
+	
+	public boolean isTestMode() {
+		return testMode;
+	}
+	
+	public Integer getOutput() {
+		if (isTestMode()) { 
+			return output;
+		}
+		throw new IllegalArgumentException("Not running in test mode!");
 	}
 	
 	private List<Integer> initialise(String opcodes) {
@@ -454,7 +473,12 @@ public class IntcodeComputer {
 		
 		@Override
 		protected void process() {
-			System.out.print(calculate());
+			Integer result = calculate();
+			if (isTestMode()) {
+				output = result;
+				return;
+			}
+			System.out.print(result);
 		}
 
 		@Override
