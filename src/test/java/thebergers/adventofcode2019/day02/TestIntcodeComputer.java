@@ -9,7 +9,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 public class TestIntcodeComputer {
 
-	@DisplayName("Test Intcode computer")
+	@DisplayName("Test Intcode computer add & multiply")
 	@ParameterizedTest(name = "{index}, input => {0}, output => {1}")
 	@CsvSource({
 		"'1,0,0,0,99','2,0,0,0,99'",
@@ -20,10 +20,22 @@ public class TestIntcodeComputer {
 		"'1002,4,3,4,33','1002,4,3,4,99'",
 		"'1101,100,-1,4,0','1101,100,-1,4,99'"
 	})
-	public void test(String input, String output) throws Exception {
+	public void testAddAndMultiply(String input, String output) throws Exception {
 		IntcodeComputer ic = new IntcodeComputer(input);
 		ic.processOpcodes();
 		assertThat(ic.getResult()).as("Check output").isEqualTo(output);
+	}
+	
+	@DisplayName("Test Intcode computer add & multiply")
+	@ParameterizedTest(name = "{index}: program => {0}, input => {1}, output => {2}")
+	@CsvSource({
+		"'3,1,101,1,1,0,99',4,'5,4,101,1,1,0,99'",
+		"'3,0,4,0,99',1,'1,0,4,0,99"
+	})
+	public void testInputAndOutput(String program, Integer input, String result) {
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.processOpcodes(input);
+		assertThat(ic.getResult()).as("Check output").isEqualTo(result);
 	}
 	
 	@DisplayName("Find noun and verb that comprise a result")

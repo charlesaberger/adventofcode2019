@@ -3,6 +3,8 @@ package thebergers.adventofcode2019.day02;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class IntcodeComputer {
@@ -11,12 +13,20 @@ public class IntcodeComputer {
 	
 	private final InstructionBuilder instructionBuilder;
 	
+	private Optional<Integer> input;
+	
 	public IntcodeComputer(String opcodesStr) {
 		this.opcodes = initialise(opcodesStr);
 		this.instructionBuilder = new InstructionBuilder();
 	}
 
-	public void processOpcodes() throws UnknownOpcodeException {
+	public void processOpcodes() {
+		this.input = Optional.empty();
+		parseInstructions();
+	}
+	
+	public void processOpcodes(Integer input) {
+		this.input = Optional.of(input);
 		parseInstructions();
 	}
 
@@ -70,6 +80,8 @@ public class IntcodeComputer {
 	enum OpCode {
 		ADD(1),
 		MULTIPLY(2),
+		INPUT(3),
+		OUTPUT(4),
 		TERMINATE(99);
 		
 		private final int value;
@@ -89,10 +101,14 @@ public class IntcodeComputer {
 				return ADD;
 			case 2:
 				return MULTIPLY;
+			case 3:
+				return INPUT;
+			case 4:
+				return OUTPUT;
 			case 99:
 				return TERMINATE;
 			default:
-				return null;
+				throw new IllegalArgumentException(String.format("Unkown OpCode: %d", value));
 			}
 		}
 	}
@@ -195,12 +211,51 @@ public class IntcodeComputer {
 			return value;
 		}
 	}
+	
+	class InstructionBuilder {
+		Instruction build(int index) {
+			Integer instructionInt = opcodes.get(index);
+			char[] instructionChars = instructionInt.toString().toCharArray();
+			OpCode opcode = parseOpcode(instructionChars);
+			Instruction instruction = getInstruction(opcode, index);
+			instruction.initialiseParameters();
+			return instruction;
+		}
+
+		private OpCode parseOpcode(char[] instructionChars) {
+			String opCodeStr = new String(instructionChars);
+			int instructionCharsLength = instructionChars.length;
+			if (instructionCharsLength >= 2) {
+				opCodeStr = opCodeStr.substring(instructionCharsLength - 2);
+			}
+			return OpCode.getInstance(Integer.parseInt(opCodeStr));
+		}
+		
+		private Instruction getInstruction(OpCode opcode, int index) {
+			switch (opcode) {
+			case ADD:
+				return new AddInstruction(opcode, index);
+			case MULTIPLY:
+				return new MultiplyInstruction(opcode, index);
+			case INPUT:
+				return new InputInstruction(opcode, index);
+			case OUTPUT:
+				return new OutputInstruction(opcode, index);
+			case TERMINATE:
+				return new TerminateInstruction(opcode, index);
+			default:
+				throw new IllegalArgumentException();
+			}
+		}
+	}
 
 	abstract class Instruction {
 
 		protected final int index;
 		
 		protected final OpCode opcode;
+		
+		protected int expectedParameters;
 		
 		protected List<Parameter> parameters;
 		
@@ -242,6 +297,16 @@ public class IntcodeComputer {
 			}
 			return modes;
 		}
+		
+		protected void setParameters(List<ParameterMode> parameterModes) {
+			int paramIndex = index;
+			parameters = new ArrayList<>();
+			for (ParameterMode mode : parameterModes) {
+				paramIndex++;
+				Integer value = opcodes.get(paramIndex);
+				parameters.add(getParameterInstance(mode, value));
+			}
+		}
 
 		@Override
 		public String toString() {
@@ -249,46 +314,12 @@ public class IntcodeComputer {
 		}
 		
 	}
-	
-	class InstructionBuilder {
-		Instruction build(int index) {
-			Integer instructionInt = opcodes.get(index);
-			char[] instructionChars = instructionInt.toString().toCharArray();
-			OpCode opcode = parseOpcode(instructionChars);
-			Instruction instruction = getInstruction(opcode, index);
-			instruction.initialiseParameters();
-			return instruction;
-		}
-
-		private OpCode parseOpcode(char[] instructionChars) {
-			String opCodeStr = new String(instructionChars);
-			int instructionCharsLength = instructionChars.length;
-			if (instructionCharsLength >= 2) {
-				opCodeStr = opCodeStr.substring(instructionCharsLength - 2);
-			}
-			return OpCode.getInstance(Integer.parseInt(opCodeStr));
-		}
-		
-		private Instruction getInstruction(OpCode opcode, int index) {
-			switch (opcode) {
-			case ADD:
-				return new AddInstruction(opcode, index);
-			case MULTIPLY:
-				return new MultiplyInstruction(opcode, index);
-			case TERMINATE:
-				return new TerminateInstruction(opcode, index);
-			default:
-				throw new IllegalArgumentException();
-			}
-		}
-	}
 
 	public class AddInstruction extends Instruction {
-		
-		private int expectedParameters = 3;
 
 		public AddInstruction(OpCode opcode, int index) {
 			super(opcode, index);
+			this.expectedParameters = 3;
 		}
 
 		@Override
@@ -299,13 +330,7 @@ public class IntcodeComputer {
 					parameterModes.add(i <= 2 ? ParameterMode.POSITIONAL : ParameterMode.WRITE);
 				}
 			}
-			int paramIndex = index;
-			parameters = new ArrayList<>();
-			for (ParameterMode mode : parameterModes) {
-				paramIndex++;
-				Integer value = opcodes.get(paramIndex);
-				parameters.add(getParameterInstance(mode, value));
-			}
+			setParameters(parameterModes);
 		}
 		
 		@Override
@@ -328,11 +353,10 @@ public class IntcodeComputer {
 	}
 
 	public class MultiplyInstruction extends Instruction {
-		
-		private int expectedParameters = 3;
 
 		public MultiplyInstruction(OpCode opcode, int index) {
 			super(opcode, index);
+			this.expectedParameters = 3;
 		}
 		
 		@Override
@@ -355,19 +379,89 @@ public class IntcodeComputer {
 					parameterModes.add(i <= 2 ? ParameterMode.POSITIONAL : ParameterMode.WRITE);
 				}
 			}
-			int paramIndex = index;
-			parameters = new ArrayList<>();
-			for (ParameterMode mode : parameterModes) {
-				paramIndex++;
-				Integer value = opcodes.get(paramIndex);
-				parameters.add(getParameterInstance(mode, value));
-			}
+			setParameters(parameterModes);
 		}
 
 		@Override
 		protected Integer getResultPosition() {
 			return parameters.get(2).getValue();
 		}
+	}
+	
+	public class InputInstruction extends Instruction {
+		
+		protected InputInstruction(OpCode opcode, int index) {
+			super(opcode, index);
+			this.expectedParameters = 1;
+		}
+
+		@Override
+		protected void initialiseParameters() {
+			List<ParameterMode> parameterModes = getParameterModes();
+			if (parameterModes.isEmpty()) {
+				parameterModes.add(ParameterMode.POSITIONAL);
+			}
+			setParameters(parameterModes);
+		}
+
+		@Override
+		protected Integer calculate() {
+			if (input.isPresent()) {
+				return input.get();
+			}
+			try (Scanner scanner = new Scanner(System.in)) {
+				return scanner.nextInt();
+			}
+		}
+
+		@Override
+		protected Integer getResultPosition() {
+			return parameters.get(0).value;
+		}
+
+		@Override
+		protected Integer getNextInstructionPointer(int instructionPointer) {
+			return instructionPointer + 2;
+		}
+		
+	}
+	
+	public class OutputInstruction extends Instruction {
+		
+		protected OutputInstruction(OpCode opcode, int index) {
+			super(opcode, index);
+			this.expectedParameters = 1;
+		}
+
+		@Override
+		protected void initialiseParameters() {
+			List<ParameterMode> parameterModes = getParameterModes();
+			if (parameterModes.isEmpty()) {
+				parameterModes.add(ParameterMode.POSITIONAL);
+			}
+			setParameters(parameterModes);
+		}
+
+		@Override
+		protected Integer calculate() {
+			return getResultPosition();
+		}
+
+		@Override
+		protected Integer getResultPosition() {
+			return parameters.get(0).getValue();
+		}
+		
+		@Override
+		protected void process() {
+			System.out.print(calculate());
+		}
+
+		@Override
+		protected Integer getNextInstructionPointer(int instructionPointer) {
+			return instructionPointer + 2;
+		}
+		
 	}
 	
 	public class TerminateInstruction extends Instruction {
