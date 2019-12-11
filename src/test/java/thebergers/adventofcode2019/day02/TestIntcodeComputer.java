@@ -61,8 +61,8 @@ public class TestIntcodeComputer {
 	@DisplayName("Test jump-if-true")
 	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
 	@CsvSource({
-		"'5,1,6,4,-1,99,4,10,99',10",
-		"'5,0,6,4,-1,99,4,10,99',-1"
+		"'5,9,6,4,10,99,4,11,99,0,-1,10',-1",
+		"'5,9,6,4,10,99,4,11,99,1,-1,10',10"
 	})
 	public void testJumpIfTrue(String program, Integer expectedResult) {
 		IntcodeComputer ic = new IntcodeComputer(program);
@@ -74,13 +74,28 @@ public class TestIntcodeComputer {
 	@DisplayName("Test jump-if-false")
 	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
 	@CsvSource({
-		"'6,0,6,4,10,99,4,-1,99',-1",
-		"'6,0,6,4,10,99,4,-1,99',10"
+		"'6,0,6,4,9,99,4,10,99,10,-1',-1",
+		"'6,0,6,4,9,99,4,10,99,10,-1',10"
 	})
 	public void testJumpIfFalse(String program, Integer expectedResult) {
 		IntcodeComputer ic = new IntcodeComputer(program);
 		ic.enableTestMode();
 		ic.processOpcodes();
+		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+	}
+	
+	@DisplayName("Test jumps")
+	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
+	@CsvSource({
+		"'3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9',0,0",
+		"'3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9',10,1",
+		"'3,3,1105,-1,9,1101,0,0,12,4,12,99,1',0,0",
+		"'3,3,1105,-1,9,1101,0,0,12,4,12,99,1',10,1"
+	})
+	public void testJumpsWithInput(String program, Integer input, Integer expectedResult) {
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.enableTestMode();
+		ic.processOpcodes(input);
 		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
 	}
 	
@@ -110,6 +125,8 @@ public class TestIntcodeComputer {
 		ic.processOpcodes();
 		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
 	}
+	
+	
 
 	@DisplayName("Test conditional opcodes")
 	@ParameterizedTest(name = "{index}: program => {0}, input => {1}, result => {2}")

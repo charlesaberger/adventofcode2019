@@ -101,6 +101,7 @@ public class IntcodeComputer {
 		MULTIPLY(2, 3),
 		INPUT(3, 1),
 		OUTPUT(4, 1),
+		JUMPIFTRUE(5, 2),
 		TERMINATE(99, 0);
 		
 		private final int value;
@@ -131,6 +132,8 @@ public class IntcodeComputer {
 				return INPUT;
 			case 4:
 				return OUTPUT;
+			case 5:
+				return JUMPIFTRUE;
 			case 99:
 				return TERMINATE;
 			default:
@@ -267,6 +270,8 @@ public class IntcodeComputer {
 				return new InputInstruction(opcode, index);
 			case OUTPUT:
 				return new OutputInstruction(opcode, index);
+			case JUMPIFTRUE:
+				return new JumpIfTrueInstruction(opcode, index);
 			case TERMINATE:
 				return new TerminateInstruction(opcode, index);
 			default:
@@ -465,6 +470,50 @@ public class IntcodeComputer {
 				return;
 			}
 			System.out.print(result);
+		}
+	}
+	
+	public class JumpIfTrueInstruction extends Instruction {
+
+		protected JumpIfTrueInstruction(OpCode opcode, int index) {
+			super(opcode, index);
+		}
+
+		@Override
+		protected void initialiseParameters() {
+			List<ParameterMode> parameterModes = getParameterModes();
+			for (int i = 1; i <= opcode.numParameters; i++) {
+				if (i > parameterModes.size()) {
+					parameterModes.add(i <= opcode.numParameters - 1 ? ParameterMode.POSITIONAL : ParameterMode.WRITE);
+				}
+			}
+			setParameters(parameterModes);
+		}
+
+		
+		@Override
+		protected void process() {
+			// Override this method and do nothing
+		}
+
+		@Override
+		protected Integer getNextInstructionPointer(int instructionPointer) {
+			if (parameters.get(0).getValue() > 0) {
+				return parameters.get(1).getValue();
+			}
+			return super.getNextInstructionPointer(instructionPointer);
+		}
+
+		@Override
+		protected Integer calculate() {
+			// We do not use this method for this instruction
+			return 0;
+		}
+
+		@Override
+		protected Integer getResultPosition() {
+			// We do not use this method for this instruction
+			return 0;
 		}
 	}
 	
