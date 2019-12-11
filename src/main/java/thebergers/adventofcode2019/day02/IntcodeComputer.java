@@ -97,20 +97,27 @@ public class IntcodeComputer {
 	}
 
 	enum OpCode {
-		ADD(1),
-		MULTIPLY(2),
-		INPUT(3),
-		OUTPUT(4),
-		TERMINATE(99);
+		ADD(1, 3),
+		MULTIPLY(2, 3),
+		INPUT(3, 1),
+		OUTPUT(4, 1),
+		TERMINATE(99, 0);
 		
 		private final int value;
+		
+		private final int numParameters;
 		
 		public int getValue() {
 			return value;
 		}
+		
+		public int getNumParameters() {
+			return numParameters;
+		}
 
-		private OpCode(int value) {
+		private OpCode(int value, int numParameters) {
 			this.value = value;
+			this.numParameters = numParameters;
 		}
 		
 		public static OpCode getInstance(Integer value) {
@@ -127,7 +134,7 @@ public class IntcodeComputer {
 			case 99:
 				return TERMINATE;
 			default:
-				throw new IllegalArgumentException(String.format("Unkown OpCode: %d", value));
+				throw new IllegalArgumentException(String.format("Unknown OpCode: %d", value));
 			}
 		}
 	}
@@ -274,8 +281,6 @@ public class IntcodeComputer {
 		
 		protected final OpCode opcode;
 		
-		protected int expectedParameters;
-		
 		protected List<Parameter> parameters;
 		
 		protected void process() {
@@ -293,7 +298,9 @@ public class IntcodeComputer {
 		
 		protected abstract Integer getResultPosition();
 		
-		protected abstract Integer getNextInstructionPointer(int instructionPointer);
+		protected Integer getNextInstructionPointer(int instructionPointer) {
+			return instructionPointer + opcode.numParameters + 1;
+		}
 		
 		protected Instruction(OpCode opcode, int index) {
 			this.index = index;
@@ -338,13 +345,12 @@ public class IntcodeComputer {
 
 		public AddInstruction(OpCode opcode, int index) {
 			super(opcode, index);
-			this.expectedParameters = 3;
 		}
 
 		@Override
 		protected void initialiseParameters() {
 			List<ParameterMode> parameterModes = getParameterModes();
-			for (int i = 1; i <= expectedParameters; i++) {
+			for (int i = 1; i <= opcode.numParameters; i++) {
 				if (i > parameterModes.size()) {
 					parameterModes.add(i <= 2 ? ParameterMode.POSITIONAL : ParameterMode.WRITE);
 				}
@@ -360,22 +366,15 @@ public class IntcodeComputer {
 		}
 
 		@Override
-		protected Integer getNextInstructionPointer(int instructionPointer) {
-			return instructionPointer + 4;
-		}
-
-		@Override
 		protected Integer getResultPosition() {
 			return parameters.get(2).getValue();
 		}
-
 	}
 
 	public class MultiplyInstruction extends Instruction {
 
 		public MultiplyInstruction(OpCode opcode, int index) {
 			super(opcode, index);
-			this.expectedParameters = 3;
 		}
 		
 		@Override
@@ -386,14 +385,9 @@ public class IntcodeComputer {
 		}
 
 		@Override
-		protected Integer getNextInstructionPointer(int instructionPointer) {
-			return instructionPointer + 4;
-		}
-
-		@Override
 		protected void initialiseParameters() {
 			List<ParameterMode> parameterModes = getParameterModes();
-			for (int i = 1; i <= expectedParameters; i++) {
+			for (int i = 1; i <= opcode.numParameters; i++) {
 				if (i > parameterModes.size()) {
 					parameterModes.add(i <= 2 ? ParameterMode.POSITIONAL : ParameterMode.WRITE);
 				}
@@ -411,7 +405,6 @@ public class IntcodeComputer {
 		
 		protected InputInstruction(OpCode opcode, int index) {
 			super(opcode, index);
-			this.expectedParameters = 1;
 		}
 
 		@Override
@@ -437,19 +430,12 @@ public class IntcodeComputer {
 		protected Integer getResultPosition() {
 			return parameters.get(0).value;
 		}
-
-		@Override
-		protected Integer getNextInstructionPointer(int instructionPointer) {
-			return instructionPointer + 2;
-		}
-		
 	}
 	
 	public class OutputInstruction extends Instruction {
 		
 		protected OutputInstruction(OpCode opcode, int index) {
 			super(opcode, index);
-			this.expectedParameters = 1;
 		}
 
 		@Override
@@ -480,12 +466,6 @@ public class IntcodeComputer {
 			}
 			System.out.print(result);
 		}
-
-		@Override
-		protected Integer getNextInstructionPointer(int instructionPointer) {
-			return instructionPointer + 2;
-		}
-		
 	}
 	
 	public class TerminateInstruction extends Instruction {
@@ -506,11 +486,6 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer getResultPosition() {
-			return null;
-		}
-
-		@Override
-		protected Integer getNextInstructionPointer(int instructionPointer) {
 			return null;
 		}
 	}
