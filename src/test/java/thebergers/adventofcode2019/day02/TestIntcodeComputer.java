@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 public class TestIntcodeComputer {
 
 	@DisplayName("Test Intcode computer add & multiply")
-	@ParameterizedTest(name = "{index}, input => {0}, output => {1}")
+	@ParameterizedTest(name = "{index}, program => {0}, output => {1}")
 	@CsvSource({
 		"'1,0,0,0,99','2,0,0,0,99'",
 		"'2,3,0,3,99','2,3,0,6,99'",
@@ -57,4 +57,76 @@ public class TestIntcodeComputer {
 		IntcodeComputer ic = new IntcodeComputer(opcodes);
 		assertThat(ic.getNounAndVerb()).as("Check noun and verb").isEqualTo("1202");
 	}
+	
+	@DisplayName("Test jump-if-true")
+	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
+	@CsvSource({
+		"'5,1,6,4,-1,99,4,10,99',10",
+		"'5,0,6,4,-1,99,4,10,99',-1"
+	})
+	public void testJumpIfTrue(String program, Integer expectedResult) {
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.enableTestMode();
+		ic.processOpcodes();
+		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+	}
+	
+	@DisplayName("Test jump-if-false")
+	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
+	@CsvSource({
+		"'6,0,6,4,10,99,4,-1,99',-1",
+		"'6,0,6,4,10,99,4,-1,99',10"
+	})
+	public void testJumpIfFalse(String program, Integer expectedResult) {
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.enableTestMode();
+		ic.processOpcodes();
+		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+	}
+	
+	@DisplayName("Test is less than")
+	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
+	@CsvSource({
+		"'7,0,1,5,4,-1,99',1",
+		"'7,2,1,5,4,-1,99',0"
+	})
+	public void testIsLessThan(String program, Integer expectedResult) {
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.enableTestMode();
+		ic.processOpcodes();
+		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+	}
+	
+	@DisplayName("Test equals")
+	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
+	@CsvSource({
+		"'8,50,50,5,4,-1,99',1",
+		"'8,49,50,5,4,-1,99',0",
+		"'8,51,50,5,4,-1,99',0"
+	})
+	public void testEquals(String program, Integer expectedResult) {
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.enableTestMode();
+		ic.processOpcodes();
+		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+	}
+
+	@DisplayName("Test conditional opcodes")
+	@ParameterizedTest(name = "{index}: program => {0}, input => {1}, result => {2}")
+	@CsvSource({
+		"'3,9,8,9,10,9,4,9,99,-1,8',4,0",
+		"'3,9,8,9,10,9,4,9,99,-1,8',8,1",
+		"'3,9,7,9,10,9,4,9,99,-1,8',7,0",
+		"'3,9,7,9,10,9,4,9,99,-1,8',9,1",
+		"'3,3,1108,-1,8,3,4,3,99',56,0",
+		"'3,3,1108,-1,8,3,4,3,99',8,1",
+		"'3,3,1107,-1,8,3,4,3,99',8,0",
+		"'3,3,1107,-1,8,3,4,3,99',7,1"
+	})
+	public void testConditionals(String program, Integer input, String result) {
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.enableTestMode();
+		ic.processOpcodes(input);
+		assertThat(ic.getResult()).as("Check output").isEqualTo(result);
+	}	
 }
