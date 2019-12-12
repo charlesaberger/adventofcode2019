@@ -102,8 +102,8 @@ public class TestIntcodeComputer {
 	@DisplayName("Test is less than")
 	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
 	@CsvSource({
-		"'7,0,1,5,4,-1,99',1",
-		"'7,2,1,5,4,-1,99',0"
+		"'7,7,8,9,4,10,99,0,1,5,-1',1",
+		"'7,7,8,9,4,10,99,2,1,5,-1',0"
 	})
 	public void testIsLessThan(String program, Integer expectedResult) {
 		IntcodeComputer ic = new IntcodeComputer(program);
@@ -129,7 +129,7 @@ public class TestIntcodeComputer {
 	
 
 	@DisplayName("Test conditional opcodes")
-	@ParameterizedTest(name = "{index}: program => {0}, input => {1}, result => {2}")
+	@ParameterizedTest(name = "{index}: program => {0}, input => {1}, output => {2}")
 	@CsvSource({
 		"'3,9,8,9,10,9,4,9,99,-1,8',4,0",
 		"'3,9,8,9,10,9,4,9,99,-1,8',8,1",
@@ -144,6 +144,6 @@ public class TestIntcodeComputer {
 		IntcodeComputer ic = new IntcodeComputer(program);
 		ic.enableTestMode();
 		ic.processOpcodes(input);
-		assertThat(ic.getResult()).as("Check output").isEqualTo(result);
+		assertThat(ic.getOutput()).as("Check output").isEqualTo(result);
 	}	
 }

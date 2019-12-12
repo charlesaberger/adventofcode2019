@@ -103,6 +103,8 @@ public class IntcodeComputer {
 		OUTPUT(4, 1),
 		JUMPIFTRUE(5, 2),
 		JUMPIFFALSE(6, 2),
+		LESSTHAN(7, 3),
+		EQUALS(8, 3),
 		TERMINATE(99, 0);
 		
 		private final int value;
@@ -137,6 +139,10 @@ public class IntcodeComputer {
 				return JUMPIFTRUE;
 			case 6:
 				return JUMPIFFALSE;
+			case 7:
+				return LESSTHAN;
+			case 8:
+				return EQUALS;
 			case 99:
 				return TERMINATE;
 			default:
@@ -277,10 +283,14 @@ public class IntcodeComputer {
 				return new JumpIfTrueInstruction(opcode, index);
 			case JUMPIFFALSE:
 				return new JumpIfFalseInstruction(opcode, index);
+			case LESSTHAN:
+				return new LessThanInstruction(opcode, index);
+			case EQUALS:
+				return new EqualsInstruction(opcode, index);
 			case TERMINATE:
 				return new TerminateInstruction(opcode, index);
 			default:
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException(String.format("Unknown OpCode: %s", opcode));
 			}
 		}
 	}
@@ -561,6 +571,66 @@ public class IntcodeComputer {
 		protected Integer getResultPosition() {
 			// We do not use this method for this instruction
 			return 0;
+		}
+	}
+	
+	class LessThanInstruction extends Instruction {
+
+		protected LessThanInstruction(OpCode opcode, int index) {
+			super(opcode, index);
+		}
+
+		@Override
+		protected void initialiseParameters() {
+			List<ParameterMode> parameterModes = getParameterModes();
+			for (int i = 1; i <= opcode.numParameters; i++) {
+				if (i > parameterModes.size()) {
+					parameterModes.add(ParameterMode.POSITIONAL);
+				}
+			}
+			setParameters(parameterModes);
+		}
+
+		@Override
+		protected Integer calculate() {
+			Integer value1 = parameters.get(0).getValue();
+			Integer value2 = parameters.get(1).getValue();
+			return value1 < value2 ? 1 : 0;
+		}
+
+		@Override
+		protected Integer getResultPosition() {
+			return parameters.get(2).getValue();
+		}
+	}
+	
+	class EqualsInstruction extends Instruction {
+
+		protected EqualsInstruction(OpCode opcode, int index) {
+			super(opcode, index);
+		}
+
+		@Override
+		protected void initialiseParameters() {
+			List<ParameterMode> parameterModes = getParameterModes();
+			for (int i = 1; i <= opcode.numParameters; i++) {
+				if (i > parameterModes.size()) {
+					parameterModes.add(ParameterMode.POSITIONAL);
+				}
+			}
+			setParameters(parameterModes);
+		}
+
+		@Override
+		protected Integer calculate() {
+			Integer value1 = parameters.get(0).getValue();
+			Integer value2 = parameters.get(1).getValue();
+			return value1.equals(value2) ? 1 : 0;
+		}
+
+		@Override
+		protected Integer getResultPosition() {
+			return parameters.get(2).getValue();
 		}
 	}
 	
