@@ -74,8 +74,8 @@ public class TestIntcodeComputer {
 	@DisplayName("Test jump-if-false")
 	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
 	@CsvSource({
-		"'6,0,6,4,9,99,4,10,99,10,-1',-1",
-		"'6,0,6,4,9,99,4,10,99,10,-1',10"
+		"'6,9,12,4,10,99,4,11,99,0,10,-1,6',-1",
+		"'6,9,12,4,10,99,4,11,99,1,10,-1,6',10"
 	})
 	public void testJumpIfFalse(String program, Integer expectedResult) {
 		IntcodeComputer ic = new IntcodeComputer(program);
@@ -85,7 +85,7 @@ public class TestIntcodeComputer {
 	}
 	
 	@DisplayName("Test jumps")
-	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
+	@ParameterizedTest(name = "{index}: program => {0}, input => {1}, result => {2}")
 	@CsvSource({
 		"'3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9',0,0",
 		"'3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9',10,1",
