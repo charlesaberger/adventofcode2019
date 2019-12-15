@@ -84,7 +84,7 @@ public class TestIntcodeComputer {
 		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
 	}
 	
-	@DisplayName("Test jumps")
+	@DisplayName("Test jumps with input")
 	@ParameterizedTest(name = "{index}: program => {0}, input => {1}, result => {2}")
 	@CsvSource({
 		"'3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9',0,0",
@@ -102,8 +102,8 @@ public class TestIntcodeComputer {
 	@DisplayName("Test is less than")
 	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
 	@CsvSource({
-		"'7,7,8,9,4,10,99,0,1,5,-1',1",
-		"'7,7,8,9,4,10,99,2,1,5,-1',0"
+		"'7,7,8,10,4,10,99,0,1,5,-1',1",
+		"'7,7,8,10,4,10,99,2,1,5,-1',0"
 	})
 	public void testIsLessThan(String program, Integer expectedResult) {
 		IntcodeComputer ic = new IntcodeComputer(program);
@@ -115,9 +115,9 @@ public class TestIntcodeComputer {
 	@DisplayName("Test equals")
 	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
 	@CsvSource({
-		"'8,50,50,5,4,-1,99',1",
-		"'8,49,50,5,4,-1,99',0",
-		"'8,51,50,5,4,-1,99',0"
+		"'8,7,8,9,4,9,99,50,50,-1',1",
+		"'8,7,8,9,4,9,99,49,50,-1',0",
+		"'8,7,8,9,4,9,99,51,50,-1',0"
 	})
 	public void testEquals(String program, Integer expectedResult) {
 		IntcodeComputer ic = new IntcodeComputer(program);
@@ -126,24 +126,36 @@ public class TestIntcodeComputer {
 		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
 	}
 	
-	
-
 	@DisplayName("Test conditional opcodes")
 	@ParameterizedTest(name = "{index}: program => {0}, input => {1}, output => {2}")
 	@CsvSource({
 		"'3,9,8,9,10,9,4,9,99,-1,8',4,0",
 		"'3,9,8,9,10,9,4,9,99,-1,8',8,1",
-		"'3,9,7,9,10,9,4,9,99,-1,8',7,0",
-		"'3,9,7,9,10,9,4,9,99,-1,8',9,1",
+		"'3,9,7,9,10,9,4,9,99,-1,8',7,1",
+		"'3,9,7,9,10,9,4,9,99,-1,8',9,0",
 		"'3,3,1108,-1,8,3,4,3,99',56,0",
 		"'3,3,1108,-1,8,3,4,3,99',8,1",
 		"'3,3,1107,-1,8,3,4,3,99',8,0",
 		"'3,3,1107,-1,8,3,4,3,99',7,1"
 	})
-	public void testConditionals(String program, Integer input, String result) {
+	public void testConditionals(String program, Integer input, Integer result) {
 		IntcodeComputer ic = new IntcodeComputer(program);
 		ic.enableTestMode();
 		ic.processOpcodes(input);
 		assertThat(ic.getOutput()).as("Check output").isEqualTo(result);
-	}	
+	}
+	
+	@DisplayName("Test Diagnostic with input")
+	@ParameterizedTest(name = "{index}: program => {0}, input => {1}, output => {2}")
+	@CsvSource({
+		"'3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99',7,999",
+		"'3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99',8,1000",
+		"'3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99',9,1001"
+	})
+	public void testDiagnosticWithInput(String program, Integer input, Integer result) {
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.enableTestMode();
+		ic.processOpcodes(input);
+		assertThat(ic.getOutput()).as("Check output").isEqualTo(result);
+	}
 }

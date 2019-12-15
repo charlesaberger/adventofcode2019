@@ -7,8 +7,13 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class IntcodeComputer {
 
+	private static final Logger LOG = LoggerFactory.getLogger(IntcodeComputer.class);
+	
 	private final List<Integer> opcodes;
 	
 	private final InstructionBuilder instructionBuilder;
@@ -87,12 +92,15 @@ public class IntcodeComputer {
 	private void parseInstructions() {
 		int instructionPointer = 0;
 		while (true) {
+			LOG.info("{}", opcodes);
 			Instruction instruction = instructionBuilder.build(instructionPointer);
+			LOG.info("{}", instruction);
 			if (instruction.isTerminate()) {
 				return;
 			}
 			instruction.process();
 			instructionPointer = instruction.getNextInstructionPointer(instructionPointer);
+			LOG.info("nextInstructionPointer={}", instructionPointer);
 		}
 	}
 
@@ -185,7 +193,8 @@ public class IntcodeComputer {
 		case IMMEDIATE:
 			return new ImmediateParameter(value);
 		default:
-			return new WriteParameter(value);
+			//return new WriteParameter(value);
+			throw new IllegalArgumentException(String.format("Unknown ParameterMode: %s",  mode));
 		}
 	}
 	
@@ -193,52 +202,60 @@ public class IntcodeComputer {
 		
 		private final ParameterMode mode;
 		
-		protected final Integer value;
+		protected final Integer address;
 		
-		private Parameter(ParameterMode mode, Integer value) {
+		private Parameter(ParameterMode mode, Integer address) {
 			this.mode = mode;
-			this.value = value;
+			this.address = address;
 		}
 		
 		public ParameterMode getMode() {
 			return mode;
 		}
 		
+		public Integer getAddress() {
+			return address;
+		}
+		
+		public Integer getValueAtAddress() {
+			return opcodes.get(address);
+		}
+		
 		abstract Integer getValue();
 
 		@Override
 		public String toString() {
-			return "Parameter [mode=" + mode + ", value=" + value + "]";
+			return "Parameter [mode=" + mode + ", addr=" + address + ", val@addr=" + getValueAtAddress() +
+					", value()=" + getValue() + "]";
 		}
 	}
 	
 	class PositionalParameter extends Parameter {
 		
-		PositionalParameter(Integer value) {
-			super(ParameterMode.POSITIONAL, value);
+		PositionalParameter(Integer address) {
+			super(ParameterMode.POSITIONAL, address);
 		}
 
 		@Override
 		Integer getValue() {
-			return opcodes.get(value);
+			Integer valueAtAddress = getValueAtAddress();
+			return opcodes.get(valueAtAddress);
 		}
-		
 	}
 	
 	class ImmediateParameter extends Parameter {
 		
-		ImmediateParameter(Integer value) {
-			super(ParameterMode.IMMEDIATE, value);
+		ImmediateParameter(Integer address) {
+			super(ParameterMode.IMMEDIATE, address);
 		}
 
 		@Override
 		Integer getValue() {
-			return value;
+			return getValueAtAddress();
 		}
-		
 	}
 	
-	class WriteParameter extends Parameter {
+	/*class WriteParameter extends Parameter {
 		
 		WriteParameter(Integer value) {
 			super(ParameterMode.WRITE, value);
@@ -246,9 +263,9 @@ public class IntcodeComputer {
 
 		@Override
 		Integer getValue() {
-			return value;
+			return address;
 		}
-	}
+	}*/
 	
 	class InstructionBuilder {
 		Instruction build(int index) {
@@ -303,9 +320,12 @@ public class IntcodeComputer {
 		
 		protected List<Parameter> parameters;
 		
+		protected Integer result;
+		
 		protected void process() {
-			Integer result = calculate();
-			opcodes.set(getResultPosition(), result);
+			result = calculate();
+			//opcodes.set(getResultPosition(), result);
+			outputResult();
 		}
 		
 		public boolean isTerminate() {
@@ -317,6 +337,8 @@ public class IntcodeComputer {
 		protected abstract Integer calculate();
 		
 		protected abstract Integer getResultPosition();
+		
+		protected abstract void outputResult(); 
 		
 		protected Integer getNextInstructionPointer(int instructionPointer) {
 			return instructionPointer + opcode.numParameters + 1;
@@ -349,8 +371,8 @@ public class IntcodeComputer {
 			parameters = new ArrayList<>();
 			for (ParameterMode mode : parameterModes) {
 				paramIndex++;
-				Integer value = opcodes.get(paramIndex);
-				parameters.add(getParameterInstance(mode, value));
+				//Integer value = opcodes.get(paramIndex);
+				parameters.add(getParameterInstance(mode, paramIndex));
 			}
 		}
 
@@ -372,7 +394,8 @@ public class IntcodeComputer {
 			List<ParameterMode> parameterModes = getParameterModes();
 			for (int i = 1; i <= opcode.numParameters; i++) {
 				if (i > parameterModes.size()) {
-					parameterModes.add(i <= 2 ? ParameterMode.POSITIONAL : ParameterMode.WRITE);
+					//parameterModes.add(i <= 2 ? ParameterMode.POSITIONAL : ParameterMode.WRITE);
+					parameterModes.add(ParameterMode.POSITIONAL);
 				}
 			}
 			setParameters(parameterModes);
@@ -387,7 +410,14 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer getResultPosition() {
-			return parameters.get(2).getValue();
+			return opcodes.get(parameters.get(2).getAddress());
+		}
+
+		@Override
+		protected void outputResult() {
+			Integer resultPosition = getResultPosition();
+			LOG.info("Writing value {} to position {}", result, resultPosition);
+			opcodes.set(resultPosition, result);
 		}
 	}
 
@@ -409,7 +439,8 @@ public class IntcodeComputer {
 			List<ParameterMode> parameterModes = getParameterModes();
 			for (int i = 1; i <= opcode.numParameters; i++) {
 				if (i > parameterModes.size()) {
-					parameterModes.add(i <= 2 ? ParameterMode.POSITIONAL : ParameterMode.WRITE);
+					//parameterModes.add(i <= 2 ? ParameterMode.POSITIONAL : ParameterMode.WRITE);
+					parameterModes.add(ParameterMode.POSITIONAL);
 				}
 			}
 			setParameters(parameterModes);
@@ -417,7 +448,12 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer getResultPosition() {
-			return parameters.get(2).getValue();
+			return opcodes.get(parameters.get(2).getAddress());
+		}
+
+		@Override
+		protected void outputResult() {
+			opcodes.set(getResultPosition(), result);
 		}
 	}
 	
@@ -448,7 +484,14 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer getResultPosition() {
-			return parameters.get(0).value;
+			return opcodes.get(parameters.get(0).getAddress());
+		}
+
+		@Override
+		protected void outputResult() {
+			Integer resultPosition = getResultPosition();
+			LOG.info("Writing value {} to position {}", result, resultPosition);
+			opcodes.set(resultPosition, result);
 		}
 	}
 	
@@ -469,15 +512,15 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer calculate() {
-			return getResultPosition();
+			return parameters.get(0).getValue();
 		}
 
 		@Override
 		protected Integer getResultPosition() {
-			return parameters.get(0).getValue();
+			return opcodes.get(parameters.get(0).getAddress());
 		}
 		
-		@Override
+		/*@Override
 		protected void process() {
 			Integer result = calculate();
 			if (isTestMode()) {
@@ -485,6 +528,15 @@ public class IntcodeComputer {
 				return;
 			}
 			System.out.print(result);
+		}*/
+
+		@Override
+		protected void outputResult() {
+			if (isTestMode()) {
+				output = result;
+				return;
+			}
+			System.out.println(result);
 		}
 	}
 	
@@ -512,10 +564,17 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer getNextInstructionPointer(int instructionPointer) {
-			if (parameters.get(0).getValue() > 0) {
-				return parameters.get(1).getValue();
+			Parameter param1 = parameters.get(0);
+			Integer param1Value = param1.getValue();
+			Parameter param2 = parameters.get(1);
+			Integer param2Value = param2.getValueAtAddress();
+			if (param1Value > 0) {
+				LOG.info("{} > 0: jumping to {}", param1Value, param2Value);
+				return param2Value;
 			}
-			return super.getNextInstructionPointer(instructionPointer);
+			Integer nextPtr = super.getNextInstructionPointer(instructionPointer);
+			LOG.info("{} <= 0: next instruction pointer is: {}", param1Value, nextPtr);
+			return nextPtr;
 		}
 
 		@Override
@@ -528,6 +587,11 @@ public class IntcodeComputer {
 		protected Integer getResultPosition() {
 			// We do not use this method for this instruction
 			return 0;
+		}
+
+		@Override
+		protected void outputResult() {
+			// no output from this instruction
 		}
 	}
 	
@@ -555,10 +619,18 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer getNextInstructionPointer(int instructionPointer) {
-			if (parameters.get(0).getValue().equals(0)) {
-				return parameters.get(1).getValue();
+			Parameter param1 = parameters.get(0);
+			Integer param1Value = param1.getValue();
+			Parameter param2 = parameters.get(1);
+			Integer param2Value = param2.getValue();
+			if (param1Value.equals(0)) {
+				LOG.info("{} = 0, jumping to instruction {}", param1Value, param2Value);
+				//return opcodes.get(param2Value);
+				return param2Value;
 			}
-			return super.getNextInstructionPointer(instructionPointer);
+			Integer nextPtr = super.getNextInstructionPointer(instructionPointer);
+			LOG.info("{} != 0: next instruction is {}", param1Value, nextPtr);
+			return nextPtr;
 		}
 
 		@Override
@@ -571,6 +643,11 @@ public class IntcodeComputer {
 		protected Integer getResultPosition() {
 			// We do not use this method for this instruction
 			return 0;
+		}
+
+		@Override
+		protected void outputResult() {
+			// no output from this instruction
 		}
 	}
 	
@@ -600,7 +677,14 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer getResultPosition() {
-			return parameters.get(2).getValue();
+			return parameters.get(2).getValueAtAddress();
+		}
+
+		@Override
+		protected void outputResult() {
+			Integer resultPosition = getResultPosition();
+			LOG.info("Writing value {} to position {}", result, resultPosition);
+			opcodes.set(resultPosition, result);
 		}
 	}
 	
@@ -630,7 +714,14 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer getResultPosition() {
-			return parameters.get(2).getValue();
+			return opcodes.get(parameters.get(2).getAddress());
+		}
+
+		@Override
+		protected void outputResult() {
+			Integer resultPosition = getResultPosition();
+			LOG.info("Writing value {} to position {}", result, resultPosition);
+			opcodes.set(resultPosition, result);
 		}
 	}
 	
@@ -653,6 +744,11 @@ public class IntcodeComputer {
 		@Override
 		protected Integer getResultPosition() {
 			return null;
+		}
+
+		@Override
+		protected void outputResult() {
+			// no output from this instruction
 		}
 	}
 }
