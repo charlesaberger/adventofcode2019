@@ -1,6 +1,7 @@
 package thebergers.adventofcode2019.day02;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,8 +62,8 @@ public class TestIntcodeComputer {
 	@DisplayName("Test jump-if-true")
 	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
 	@CsvSource({
-		"'5,9,6,4,10,99,4,11,99,0,-1,10',-1",
-		"'5,9,6,4,10,99,4,11,99,1,-1,10',10"
+		"'1005,9,6,4,10,99,4,11,99,0,-1,10',-1",
+		"'1005,9,6,4,10,99,4,11,99,1,-1,10',10"
 	})
 	public void testJumpIfTrue(String program, Integer expectedResult) {
 		IntcodeComputer ic = new IntcodeComputer(program);
@@ -157,5 +158,31 @@ public class TestIntcodeComputer {
 		ic.enableTestMode();
 		ic.processOpcodes(input);
 		assertThat(ic.getOutput()).as("Check output").isEqualTo(result);
+	}
+	
+	@DisplayName("Tests from Reddit")
+	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
+	@CsvSource({
+		"'1,0,3,3,1005,2,10,5,1,0,4,1,99',0",
+		"'101,-1,7,7,4,7,1105,11,0,99',0"
+	})
+	public void testReddit(String program, Integer expectedResult) {
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.enableTestMode();
+		ic.processOpcodes();
+		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+	}
+	
+	@DisplayName("Invalid opcode error")
+	@ParameterizedTest(name = "{index}: program => {0}, result => {1}")
+	@CsvSource({
+		"'1101,9,0,0,105,1,0,1998,819,998',-1"
+	})
+	public void testInvalidOpcode(String program, Integer expectedResult) {
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.enableTestMode();
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
+			ic.processOpcodes();
+		});
 	}
 }

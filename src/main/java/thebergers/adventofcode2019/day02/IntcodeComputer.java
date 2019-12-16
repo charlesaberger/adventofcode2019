@@ -193,7 +193,6 @@ public class IntcodeComputer {
 		case IMMEDIATE:
 			return new ImmediateParameter(value);
 		default:
-			//return new WriteParameter(value);
 			throw new IllegalArgumentException(String.format("Unknown ParameterMode: %s",  mode));
 		}
 	}
@@ -255,18 +254,6 @@ public class IntcodeComputer {
 		}
 	}
 	
-	/*class WriteParameter extends Parameter {
-		
-		WriteParameter(Integer value) {
-			super(ParameterMode.WRITE, value);
-		}
-
-		@Override
-		Integer getValue() {
-			return address;
-		}
-	}*/
-	
 	class InstructionBuilder {
 		Instruction build(int index) {
 			Integer instructionInt = opcodes.get(index);
@@ -324,7 +311,6 @@ public class IntcodeComputer {
 		
 		protected void process() {
 			result = calculate();
-			//opcodes.set(getResultPosition(), result);
 			outputResult();
 		}
 		
@@ -371,14 +357,13 @@ public class IntcodeComputer {
 			parameters = new ArrayList<>();
 			for (ParameterMode mode : parameterModes) {
 				paramIndex++;
-				//Integer value = opcodes.get(paramIndex);
 				parameters.add(getParameterInstance(mode, paramIndex));
 			}
 		}
 
 		@Override
 		public String toString() {
-			return "Instruction [index=" + index + ", opcode=" + opcode + ", parameters=" + parameters + "]";
+			return "Instruction [index=" + index + ", val@index=" + opcodes.get(index) + ", opcode=" + opcode + ", parameters=" + parameters + "]";
 		}
 		
 	}
@@ -394,7 +379,6 @@ public class IntcodeComputer {
 			List<ParameterMode> parameterModes = getParameterModes();
 			for (int i = 1; i <= opcode.numParameters; i++) {
 				if (i > parameterModes.size()) {
-					//parameterModes.add(i <= 2 ? ParameterMode.POSITIONAL : ParameterMode.WRITE);
 					parameterModes.add(ParameterMode.POSITIONAL);
 				}
 			}
@@ -439,7 +423,6 @@ public class IntcodeComputer {
 			List<ParameterMode> parameterModes = getParameterModes();
 			for (int i = 1; i <= opcode.numParameters; i++) {
 				if (i > parameterModes.size()) {
-					//parameterModes.add(i <= 2 ? ParameterMode.POSITIONAL : ParameterMode.WRITE);
 					parameterModes.add(ParameterMode.POSITIONAL);
 				}
 			}
@@ -519,16 +502,6 @@ public class IntcodeComputer {
 		protected Integer getResultPosition() {
 			return opcodes.get(parameters.get(0).getAddress());
 		}
-		
-		/*@Override
-		protected void process() {
-			Integer result = calculate();
-			if (isTestMode()) {
-				output = result;
-				return;
-			}
-			System.out.print(result);
-		}*/
 
 		@Override
 		protected void outputResult() {
@@ -567,7 +540,7 @@ public class IntcodeComputer {
 			Parameter param1 = parameters.get(0);
 			Integer param1Value = param1.getValue();
 			Parameter param2 = parameters.get(1);
-			Integer param2Value = param2.getValueAtAddress();
+			Integer param2Value = param2.getValue();
 			if (param1Value > 0) {
 				LOG.info("{} > 0: jumping to {}", param1Value, param2Value);
 				return param2Value;
@@ -625,7 +598,6 @@ public class IntcodeComputer {
 			Integer param2Value = param2.getValue();
 			if (param1Value.equals(0)) {
 				LOG.info("{} = 0, jumping to instruction {}", param1Value, param2Value);
-				//return opcodes.get(param2Value);
 				return param2Value;
 			}
 			Integer nextPtr = super.getNextInstructionPointer(instructionPointer);
