@@ -3,6 +3,8 @@ package thebergers.adventofcode2019.day02;
 import java.io.IOException;
 import java.util.List;
 
+import thebergers.adventofcode2019.intcodecomputer.IntcodeComputer;
+import thebergers.adventofcode2019.intcodecomputer.UnknownOpcodeException;
 import thebergers.adventofcode2019.utils.Utils;
 
 public class DayTwo {

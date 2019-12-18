@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import thebergers.adventofcode2019.intcodecomputer.IntcodeComputer;
+
 public class TestIntcodeComputer {
 
 	@DisplayName("Test Intcode computer add & multiply")

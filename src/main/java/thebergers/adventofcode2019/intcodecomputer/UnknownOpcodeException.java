@@ -1,4 +1,4 @@
-package thebergers.adventofcode2019.day02;
+package thebergers.adventofcode2019.intcodecomputer;
 
 public class UnknownOpcodeException extends Exception {
 

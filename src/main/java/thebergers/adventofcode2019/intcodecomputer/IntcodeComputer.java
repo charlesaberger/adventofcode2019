@@ -1,4 +1,4 @@
-package thebergers.adventofcode2019.day02;
+package thebergers.adventofcode2019.intcodecomputer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
