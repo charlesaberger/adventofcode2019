@@ -19,8 +19,21 @@ public class TestDay06 {
 		assertThat(uom.calculateOrbitCountChecksum()).as("Calculate universe orbit count checksum").isEqualTo(42);
 	}
 	
+	@Test
+	public void testCountOrbitalTransfers() {
+		UniversalOrbitMap uom = new UniversalOrbitMapBuilder(getMapDataForPart2()).build();
+		assertThat(uom.countOrbitalTransfers("YOU", "SAN")).as("Count Orbital Transfers").isEqualTo(4);
+	}
+	
 	private List<String> getMapData() {
 		return Stream.of("J)K","C)D","K)L","G)H","D)E","E)F","COM)B","B)G","D)I","E)J","B)C")
 				.collect(Collectors.toList());
+	}
+	
+	private List<String> getMapDataForPart2() {
+		List<String> mapData = getMapData();
+		mapData.add("K)YOU");
+		mapData.add("I)SAN");
+		return mapData;
 	}
 }
