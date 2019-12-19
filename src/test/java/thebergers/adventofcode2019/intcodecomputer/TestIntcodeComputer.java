@@ -1,4 +1,4 @@
-package thebergers.adventofcode2019.day02;
+package thebergers.adventofcode2019.intcodecomputer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -9,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import thebergers.adventofcode2019.intcodecomputer.IntcodeComputer;
+import thebergers.adventofcode2019.intcodecomputer.IntcodeComputer.OutputMode;
 
 public class TestIntcodeComputer {
 
@@ -186,5 +187,16 @@ public class TestIntcodeComputer {
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
 			ic.processOpcodes();
 		});
+	}
+	
+	@Test
+	public void testQueuedInput() {
+		String program = "3,11,3,12,1,11,12,13,4,13,99,-1,-1,-1";
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.addInput(1);
+		ic.addInput(2);
+		ic.setOutputMode(OutputMode.SAVE);
+		ic.processOpcodes();
+		assertThat(ic.getOutput()).as("1 + 2 = 3").isEqualTo(3);
 	}
 }

@@ -3,7 +3,6 @@ package thebergers.adventofcode2019.intcodecomputer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -18,11 +17,11 @@ public class IntcodeComputer {
 	
 	private final InstructionBuilder instructionBuilder;
 	
-	private Optional<Integer> input;
+	private List<Integer> input = new ArrayList<>();
 	
 	private Integer output;
 	
-	private boolean testMode = false;
+	private OutputMode outputMode = OutputMode.CONSOLE;
 	
 	public IntcodeComputer(String opcodesStr) {
 		this.opcodes = initialise(opcodesStr);
@@ -30,12 +29,11 @@ public class IntcodeComputer {
 	}
 
 	public void processOpcodes() {
-		this.input = Optional.empty();
 		parseInstructions();
 	}
 	
 	public void processOpcodes(Integer input) {
-		this.input = Optional.of(input);
+		this.input.add(input);
 		parseInstructions();
 	}
 
@@ -59,20 +57,27 @@ public class IntcodeComputer {
 		reset();
 		this.opcodes.addAll(initialise(opcodesStr));
 	}
-	
-	public void enableTestMode() {
-		this.testMode = true;
+
+	public void addInput(Integer input) {
+		this.input.add(input);
 	}
 	
-	public boolean isTestMode() {
-		return testMode;
+	public void setOutputMode(OutputMode outputMode) {
+		this.outputMode = outputMode;
+	}
+	
+	public void enableTestMode() {
+		this.outputMode = OutputMode.TEST;
 	}
 	
 	public Integer getOutput() {
-		if (isTestMode()) { 
+		switch (outputMode) {
+		case SAVE:
+		case TEST:
 			return output;
+		default:
+			throw new IllegalArgumentException("Not running in test or save output mode!");
 		}
-		throw new IllegalArgumentException("Not running in test mode!");
 	}
 	
 	private List<Integer> initialise(String opcodes) {
@@ -92,15 +97,15 @@ public class IntcodeComputer {
 	private void parseInstructions() {
 		int instructionPointer = 0;
 		while (true) {
-			LOG.info("{}", opcodes);
+			//LOG.info("{}", opcodes);
 			Instruction instruction = instructionBuilder.build(instructionPointer);
-			LOG.info("{}", instruction);
+			//LOG.info("{}", instruction);
 			if (instruction.isTerminate()) {
 				return;
 			}
 			instruction.process();
 			instructionPointer = instruction.getNextInstructionPointer(instructionPointer);
-			LOG.info("nextInstructionPointer={}", instructionPointer);
+			//LOG.info("nextInstructionPointer={}", instructionPointer);
 		}
 	}
 
@@ -184,6 +189,12 @@ public class IntcodeComputer {
 				return WRITE;
 			}
 		}
+	}
+	
+	public enum OutputMode {
+		CONSOLE,
+		SAVE,
+		TEST
 	}
 	
 	public Parameter getParameterInstance(ParameterMode mode, Integer value) {
@@ -400,7 +411,7 @@ public class IntcodeComputer {
 		@Override
 		protected void outputResult() {
 			Integer resultPosition = getResultPosition();
-			LOG.info("Writing value {} to position {}", result, resultPosition);
+			//LOG.info("Writing value {} to position {}", result, resultPosition);
 			opcodes.set(resultPosition, result);
 		}
 	}
@@ -457,8 +468,8 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer calculate() {
-			if (input.isPresent()) {
-				return input.get();
+			if (!input.isEmpty()) {
+				return input.remove(0);
 			}
 			try (Scanner scanner = new Scanner(System.in)) {
 				return scanner.nextInt();
@@ -473,7 +484,7 @@ public class IntcodeComputer {
 		@Override
 		protected void outputResult() {
 			Integer resultPosition = getResultPosition();
-			LOG.info("Writing value {} to position {}", result, resultPosition);
+			//LOG.info("Writing value {} to position {}", result, resultPosition);
 			opcodes.set(resultPosition, result);
 		}
 	}
@@ -505,11 +516,14 @@ public class IntcodeComputer {
 
 		@Override
 		protected void outputResult() {
-			if (isTestMode()) {
+			switch (outputMode) {
+			case SAVE:
+			case TEST:
 				output = result;
 				return;
+			default:
+				System.out.println(result);
 			}
-			System.out.println(result);
 		}
 	}
 	
@@ -542,11 +556,11 @@ public class IntcodeComputer {
 			Parameter param2 = parameters.get(1);
 			Integer param2Value = param2.getValue();
 			if (param1Value > 0) {
-				LOG.info("{} > 0: jumping to {}", param1Value, param2Value);
+				//LOG.info("{} > 0: jumping to {}", param1Value, param2Value);
 				return param2Value;
 			}
 			Integer nextPtr = super.getNextInstructionPointer(instructionPointer);
-			LOG.info("{} <= 0: next instruction pointer is: {}", param1Value, nextPtr);
+			//LOG.info("{} <= 0: next instruction pointer is: {}", param1Value, nextPtr);
 			return nextPtr;
 		}
 
@@ -597,11 +611,11 @@ public class IntcodeComputer {
 			Parameter param2 = parameters.get(1);
 			Integer param2Value = param2.getValue();
 			if (param1Value.equals(0)) {
-				LOG.info("{} = 0, jumping to instruction {}", param1Value, param2Value);
+				//LOG.info("{} = 0, jumping to instruction {}", param1Value, param2Value);
 				return param2Value;
 			}
 			Integer nextPtr = super.getNextInstructionPointer(instructionPointer);
-			LOG.info("{} != 0: next instruction is {}", param1Value, nextPtr);
+			//LOG.info("{} != 0: next instruction is {}", param1Value, nextPtr);
 			return nextPtr;
 		}
 
@@ -655,7 +669,7 @@ public class IntcodeComputer {
 		@Override
 		protected void outputResult() {
 			Integer resultPosition = getResultPosition();
-			LOG.info("Writing value {} to position {}", result, resultPosition);
+			//LOG.info("Writing value {} to position {}", result, resultPosition);
 			opcodes.set(resultPosition, result);
 		}
 	}
@@ -692,7 +706,7 @@ public class IntcodeComputer {
 		@Override
 		protected void outputResult() {
 			Integer resultPosition = getResultPosition();
-			LOG.info("Writing value {} to position {}", result, resultPosition);
+			//LOG.info("Writing value {} to position {}", result, resultPosition);
 			opcodes.set(resultPosition, result);
 		}
 	}
