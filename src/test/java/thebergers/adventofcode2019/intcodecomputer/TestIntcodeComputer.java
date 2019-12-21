@@ -198,5 +198,32 @@ public class TestIntcodeComputer {
 		ic.setOutputMode(OutputMode.SAVE);
 		ic.processOpcodes();
 		assertThat(ic.getOutput()).as("1 + 2 = 3").isEqualTo(3);
+		assertThat(ic.isTerminated()).as("Is terminated?").isTrue();
+	}
+	
+	@DisplayName("Test save and exit")
+	@Test
+	public void testSaveExit() {
+		String program = "1101,2,2,11,4,11,1101,3,3,11,99,-1";
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.setOutputMode(OutputMode.SAVEANDEXIT);
+		ic.processOpcodes();
+		assertThat(ic.isTerminated()).as("Is Terminated?").isFalse();
+		assertThat(ic.getOutput()).as("Output").isEqualTo(4);
+	}
+	
+	@DisplayName("Test save, exit & resume")
+	@Test
+	public void testSaveExitResume() {
+		String program = "1101,2,2,15,4,15,3,15,1001,15,3,15,4,15,99,-1";
+		IntcodeComputer ic = new IntcodeComputer(program);
+		ic.setOutputMode(OutputMode.SAVEANDEXIT);
+		ic.processOpcodes();
+		assertThat(ic.isTerminated()).as("Is Terminated?").isFalse();
+		assertThat(ic.getOutput()).as("Output").isEqualTo(4);
+		ic.addInput(ic.getOutput());
+		ic.processOpcodes();
+		assertThat(ic.getOutput()).as("Output after resumed").isEqualTo(7);
+		assertThat(ic.isTerminated()).as("Is Terminated").isTrue();
 	}
 }

@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.IntPredicate;
 
 public class ThrusterSignalController {
 
@@ -27,5 +28,19 @@ public class ThrusterSignalController {
 			calculators = new HashMap<>();
 		}
 		calculators.put(calculator.getPhaseSetting(), calculator);
+	}
+
+	public Integer calculateMaxThrustWithFeedback() {
+		Optional<Integer> maxThrust = calculators
+				.entrySet()
+				.stream()
+				//.parallelStream()
+				.map(entry -> entry.getValue().calculateThrustWithFeedback(0))
+				.sorted(Comparator.reverseOrder())
+				.findFirst();
+		if (maxThrust.isPresent()) {
+			return maxThrust.get();
+		}
+		throw new RuntimeException("Unable to determine max thrust!");
 	}
 }

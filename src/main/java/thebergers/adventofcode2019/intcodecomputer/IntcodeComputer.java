@@ -17,6 +17,12 @@ public class IntcodeComputer {
 	
 	private final InstructionBuilder instructionBuilder;
 	
+	private boolean exit = false;
+	
+	private boolean terminated = false;
+	
+	Integer instructionPointer = 0;
+	
 	private List<Integer> input = new ArrayList<>();
 	
 	private Integer output;
@@ -72,6 +78,8 @@ public class IntcodeComputer {
 	
 	public Integer getOutput() {
 		switch (outputMode) {
+		case SAVEANDEXIT:
+			
 		case SAVE:
 		case TEST:
 			return output;
@@ -94,17 +102,21 @@ public class IntcodeComputer {
 		return String.format("%d", (opcodes.get(nounIndex) * 100) + opcodes.get(verbIndex));
 	}
 	
+	public boolean isTerminated() {
+		return terminated;
+	}
+	
 	private void parseInstructions() {
-		int instructionPointer = 0;
+		exit = false;
 		while (true) {
 			//LOG.info("{}", opcodes);
 			Instruction instruction = instructionBuilder.build(instructionPointer);
 			//LOG.info("{}", instruction);
-			if (instruction.isTerminate()) {
-				return;
-			}
 			instruction.process();
 			instructionPointer = instruction.getNextInstructionPointer(instructionPointer);
+			if (exit) {
+				return;
+			}
 			//LOG.info("nextInstructionPointer={}", instructionPointer);
 		}
 	}
@@ -194,6 +206,7 @@ public class IntcodeComputer {
 	public enum OutputMode {
 		CONSOLE,
 		SAVE,
+		SAVEANDEXIT,
 		TEST
 	}
 	
@@ -517,6 +530,8 @@ public class IntcodeComputer {
 		@Override
 		protected void outputResult() {
 			switch (outputMode) {
+			case SAVEANDEXIT:
+				exit = true;
 			case SAVE:
 			case TEST:
 				output = result;
@@ -724,6 +739,8 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer calculate() {
+			exit = true;
+			terminated = true;
 			return null;
 		}
 
