@@ -5,15 +5,13 @@ import java.util.stream.Collectors;
 
 public class IntcodeComputerResult {
 
-	//private final List<Integer> opcodes;
 	private final String result;
 	
 	private final Integer output;
 	
 	private boolean terminated;
 	
-	public IntcodeComputerResult(/*List<Integer> opcodes*/String result, Integer output, boolean terminated) {
-		//this.opcodes = opcodes;
+	public IntcodeComputerResult(String result, Integer output, boolean terminated) {
 		this.result = result;
 		this.output = output;
 		this.terminated = terminated;
@@ -24,7 +22,10 @@ public class IntcodeComputerResult {
 	}
 	
 	public String getResult() {
-		return result; //opcodes.stream().map(n -> n.toString()).collect(Collectors.joining(","));
+		return result;
+	}
+	public Integer getPosition(int i) {
+		return Integer.parseInt(getOpcodes()[i]);
 	}
 
 	public boolean isTerminated() {
@@ -32,12 +33,16 @@ public class IntcodeComputerResult {
 	}
 	
 	public String getNounAndVerb() {
-		return getNounAndVerb(1, 2); //String.format("%d", (opcodes.get(1) * 100) + opcodes.get(2));
+		return getNounAndVerb(1, 2);
 	}
 	
 	public String getNounAndVerb(int nounIndex, int verbIndex) {
-		String[] opcodes = result.split(",");
+		String[] opcodes = getOpcodes();
 		return String.format("%d", (Integer.parseInt(opcodes[nounIndex]) * 100) +
 				Integer.parseInt(opcodes[verbIndex]));
+	}
+	
+	private String[] getOpcodes() {
+		return result.split(",");
 	}
 }

@@ -38,16 +38,13 @@ public class IntcodeComputer {
 		opcodes.set(index, value);
 	}
 
-	public Integer getPosition(int i) {
-		return opcodes.get(i);
-	}
-
 	private String getResult() {
 		return opcodes.stream().map(n -> n.toString()).collect(Collectors.joining(","));
 	}
 	
 	public void reset() {
 		opcodes.clear();
+		this.instructionPointer = 0;
 	}
 	
 	public void reset(String opcodesStr) {
