@@ -1,6 +1,10 @@
 package thebergers.adventofcode2019.day07;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 import thebergers.adventofcode2019.intcodecomputer.IntcodeComputer;
+import thebergers.adventofcode2019.intcodecomputer.IntcodeComputerResult;
 
 public class Amplifier {
 
@@ -8,24 +12,28 @@ public class Amplifier {
 	
 	private final IntcodeComputer intcodeComputer;
 	
-	public Amplifier(Integer phase, String program, IntcodeComputer.OutputMode outputMode) {
+	private IntcodeComputerResult result;
+	
+	public Amplifier(Integer phase, String program) {
 		this.phase = phase;
 		this.intcodeComputer = new IntcodeComputer(program);
 		this.intcodeComputer.addInput(phase);
-		this.intcodeComputer.setOutputMode(outputMode);
 	}
 	
-	public Integer calculateThrust(Integer input) {
-		intcodeComputer.addInput(input);
-		intcodeComputer.processOpcodes();
-		return intcodeComputer.getOutput();
+	public IntcodeComputerResult calculateThrust(Integer input) throws InterruptedException, ExecutionException {
+		CompletableFuture<IntcodeComputerResult> future = CompletableFuture.supplyAsync(() -> {
+			intcodeComputer.addInput(input);
+			return intcodeComputer.processOpcodes();
+		});
+		result = future.get();
+		return result;
 	}
 	
 	public boolean isTerminated() {
-		return intcodeComputer.isTerminated();
+		return result.isTerminated();
 	}
 	
 	public Integer getOutput() {
-		return intcodeComputer.getOutput();
+		return result.getOutput();
 	}
 }

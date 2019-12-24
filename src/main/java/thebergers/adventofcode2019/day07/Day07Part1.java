@@ -12,6 +12,7 @@ public class Day07Part1 {
 		ThrusterSignalController tsc = ThrusterSignalControllerBuilder
 				.newInstance()
 				.setProgram(program)
+				.setPhaseSettingRange(0, 4)
 				.build();
 		Integer maxThrust = tsc.calculateMaxThrust();
 		System.out.format("Max thrust signal = %d%n", maxThrust);

@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.IntPredicate;
+import java.util.concurrent.ExecutionException;
 
 public class ThrusterSignalController {
 
@@ -14,7 +14,16 @@ public class ThrusterSignalController {
 		Optional<Integer> maxThrust = calculators
 				.entrySet()
 				.stream()
-				.map(entry -> entry.getValue().calculateThrust())
+				.map(entry -> {
+					try {
+						return entry.getValue().calculateThrust();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (ExecutionException e) {
+						e.printStackTrace();
+					}
+					return -1;
+				})
 				.sorted(Comparator.reverseOrder())
 				.findFirst();
 		if (maxThrust.isPresent()) {

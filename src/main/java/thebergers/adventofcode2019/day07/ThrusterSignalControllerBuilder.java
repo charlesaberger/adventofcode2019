@@ -6,8 +6,6 @@ import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.StringUtils;
 
-import thebergers.adventofcode2019.intcodecomputer.IntcodeComputer;
-
 public class ThrusterSignalControllerBuilder {
 	
 	private final List<String> phaseSettings = new ArrayList<>();
@@ -15,8 +13,6 @@ public class ThrusterSignalControllerBuilder {
 	private Integer rangeStart = -1;
 	
 	private Integer rangeEnd = -1;
-	
-	private IntcodeComputer.OutputMode outputMode;
 	
 	private String program;
 
@@ -37,11 +33,6 @@ public class ThrusterSignalControllerBuilder {
 	public static ThrusterSignalControllerBuilder newInstance() {
 		return new ThrusterSignalControllerBuilder();
 	}
-	
-	public ThrusterSignalControllerBuilder setOutputMode(IntcodeComputer.OutputMode outputMode) {
-		this.outputMode = outputMode;
-		return this;
-	}
 
 	public ThrusterSignalController build() {
 		if (StringUtils.isEmpty(program)) {
@@ -51,12 +42,9 @@ public class ThrusterSignalControllerBuilder {
 		if (phaseSettings.isEmpty()) {
 			generatePhaseSettings();
 		}
-		if (outputMode == null) {
-			outputMode = IntcodeComputer.OutputMode.SAVE;
-		}
 		phaseSettings
 		.stream()
-		.map(phase ->  new ThrusterSignalCalculator(phase, program, outputMode))
+		.map(phase ->  new ThrusterSignalCalculator(phase, program))
 		.forEach(controller::addThrusterSignalCalculator);
 		return controller;
 	}

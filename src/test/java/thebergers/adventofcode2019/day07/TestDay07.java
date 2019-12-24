@@ -5,12 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-
-import thebergers.adventofcode2019.intcodecomputer.IntcodeComputer;
 
 public class TestDay07 {
 
@@ -30,6 +28,8 @@ public class TestDay07 {
 		assertThat(tsc.calculateMaxThrust()).as("Calculate Max Thrust").isEqualTo(result);
 	}
 	
+	
+	@Disabled("Not ready for testing yet")
 	@DisplayName("Calculate Max Thruster signal pt 2")
 	@ParameterizedTest(name = "{index}: phase setting:{0}, result: {1}, program: {2}")
 	@CsvSource({
@@ -41,7 +41,6 @@ public class TestDay07 {
 				.newInstance()
 				.setPhaseSettingRange(5, 9)
 				.setProgram(program)
-				.setOutputMode(IntcodeComputer.OutputMode.SAVEANDEXIT)
 				.build();
 		assertThat(tsc.calculateMaxThrustWithFeedback()).as("Calculate Max Thrust").isEqualTo(result);
 	}
@@ -58,7 +57,7 @@ public class TestDay07 {
 				.setPhaseSettingRange(rangeStart, rangeEnd)
 				.setProgram("99");
 		
-		ThrusterSignalController tsc = tscb.build();
+		tscb.build();
 		List<String> phaseSettings = tscb.getPhaseSettings();
 		boolean duplicatesFound = phaseSettings.parallelStream()
 				.collect(Collectors.groupingBy(p -> p))

@@ -3,13 +3,14 @@ package thebergers.adventofcode2019.intcodecomputer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import thebergers.adventofcode2019.intcodecomputer.IntcodeComputer;
-import thebergers.adventofcode2019.intcodecomputer.IntcodeComputer.OutputMode;
 
 public class TestIntcodeComputer {
 
@@ -25,9 +26,13 @@ public class TestIntcodeComputer {
 		"'1101,100,-1,4,0','1101,100,-1,4,99'"
 	})
 	public void testAddAndMultiply(String input, String output) throws Exception {
-		IntcodeComputer ic = new IntcodeComputer(input);
-		ic.processOpcodes();
-		assertThat(ic.getResult()).as("Check output").isEqualTo(output);
+		CompletableFuture.supplyAsync(() -> {
+			IntcodeComputer ic = new IntcodeComputer(input);
+			return ic.processOpcodes();
+		}).thenAccept(result -> {
+			assertThat(result.getResult()).as("Check output").isEqualTo(output);
+			assertThat(result.isTerminated()).as("Is Terminated").isTrue();
+		});
 	}
 	
 	@DisplayName("Test Intcode computer input opcode")
@@ -35,10 +40,15 @@ public class TestIntcodeComputer {
 	@CsvSource({
 		"'3,1,101,1,1,0,99',4,'5,4,101,1,1,0,99'"
 	})
-	public void testInput(String program, Integer input, String result) {
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.processOpcodes(input);
-		assertThat(ic.getResult()).as("Check output").isEqualTo(result);
+	public void testInput(String program, Integer input, String expected) {
+		CompletableFuture.supplyAsync(() -> {
+			IntcodeComputer ic = new IntcodeComputer(program);
+			ic.addInput(input);
+			return ic.processOpcodes();
+		})
+		.thenAccept(result -> 
+			assertThat(result.getResult()).as("Check output").isEqualTo(expected)
+		);
 	}
 	
 	@DisplayName("Test Intcode computer input opcode")
@@ -46,20 +56,27 @@ public class TestIntcodeComputer {
 	@CsvSource({
 		"'3,0,4,0,99',1,'1,0,4,0,99'"
 	})
-	public void testOutput(String program, Integer input, String result) {
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.enableTestMode();
-		ic.processOpcodes(input);
-		assertThat(ic.getResult()).as("Check result").isEqualTo(result);
-		assertThat(ic.getOutput()).as("Check output").isEqualTo(input);
+	public void testOutput(String program, Integer input, String expected) {
+		CompletableFuture.supplyAsync(() -> {
+			IntcodeComputer ic = new IntcodeComputer(program);
+			ic.addInput(input);
+			return ic.processOpcodes();
+		}).thenAccept(result -> {
+			assertThat(result.getResult()).as("Check result").isEqualTo(result);
+			assertThat(result.getOutput()).as("Check output").isEqualTo(input);
+		});
 	}
 	
 	@DisplayName("Find noun and verb that comprise a result")
 	@Test
 	public void testGetNounAndVerb() {
-		String opcodes = "0,12,2,0,99";
-		IntcodeComputer ic = new IntcodeComputer(opcodes);
-		assertThat(ic.getNounAndVerb()).as("Check noun and verb").isEqualTo("1202");
+		CompletableFuture.supplyAsync(() -> {
+			String opcodes = "0,12,2,0,99";
+			IntcodeComputer ic = new IntcodeComputer(opcodes);
+			return ic.processOpcodes();
+		}).thenAccept(result -> {
+			assertThat(result.getNounAndVerb()).as("Check noun and verb").isEqualTo("1202");
+		});
 	}
 	
 	@DisplayName("Test jump-if-true")
@@ -69,10 +86,10 @@ public class TestIntcodeComputer {
 		"'1005,9,6,4,10,99,4,11,99,1,-1,10',10"
 	})
 	public void testJumpIfTrue(String program, Integer expectedResult) {
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.enableTestMode();
-		ic.processOpcodes();
-		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+		CompletableFuture.supplyAsync(() -> {
+			IntcodeComputer ic = new IntcodeComputer(program);
+			return ic.processOpcodes();
+		}).thenAccept(result -> assertThat(result.getOutput()).as("Check result").isEqualTo(expectedResult));
 	}
 	
 	@DisplayName("Test jump-if-false")
@@ -82,10 +99,10 @@ public class TestIntcodeComputer {
 		"'6,9,12,4,10,99,4,11,99,1,10,-1,6',10"
 	})
 	public void testJumpIfFalse(String program, Integer expectedResult) {
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.enableTestMode();
-		ic.processOpcodes();
-		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+		CompletableFuture.supplyAsync(() -> {
+			IntcodeComputer ic = new IntcodeComputer(program);
+			return ic.processOpcodes();
+		}).thenAccept(result -> assertThat(result.getOutput()).as("Check result").isEqualTo(expectedResult));
 	}
 	
 	@DisplayName("Test jumps with input")
@@ -97,10 +114,11 @@ public class TestIntcodeComputer {
 		"'3,3,1105,-1,9,1101,0,0,12,4,12,99,1',10,1"
 	})
 	public void testJumpsWithInput(String program, Integer input, Integer expectedResult) {
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.enableTestMode();
-		ic.processOpcodes(input);
-		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+		CompletableFuture.supplyAsync(() -> {
+			IntcodeComputer ic = new IntcodeComputer(program);
+			ic.addInput(input);
+			return ic.processOpcodes();
+		}).thenAccept(result -> assertThat(result.getOutput()).as("Check result").isEqualTo(expectedResult));
 	}
 	
 	@DisplayName("Test is less than")
@@ -110,10 +128,10 @@ public class TestIntcodeComputer {
 		"'7,7,8,10,4,10,99,2,1,5,-1',0"
 	})
 	public void testIsLessThan(String program, Integer expectedResult) {
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.enableTestMode();
-		ic.processOpcodes();
-		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+		CompletableFuture.supplyAsync(() -> {
+			IntcodeComputer ic = new IntcodeComputer(program);
+			return ic.processOpcodes();
+		}).thenAccept(result -> assertThat(result.getOutput()).as("Check result").isEqualTo(expectedResult));
 	}
 	
 	@DisplayName("Test equals")
@@ -124,10 +142,10 @@ public class TestIntcodeComputer {
 		"'8,7,8,9,4,9,99,51,50,-1',0"
 	})
 	public void testEquals(String program, Integer expectedResult) {
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.enableTestMode();
-		ic.processOpcodes();
-		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+		CompletableFuture.supplyAsync(() -> {
+			IntcodeComputer ic = new IntcodeComputer(program);
+			return ic.processOpcodes();
+		}).thenAccept(result -> assertThat(result.getOutput()).as("Check result").isEqualTo(expectedResult));
 	}
 	
 	@DisplayName("Test conditional opcodes")
@@ -142,11 +160,12 @@ public class TestIntcodeComputer {
 		"'3,3,1107,-1,8,3,4,3,99',8,0",
 		"'3,3,1107,-1,8,3,4,3,99',7,1"
 	})
-	public void testConditionals(String program, Integer input, Integer result) {
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.enableTestMode();
-		ic.processOpcodes(input);
-		assertThat(ic.getOutput()).as("Check output").isEqualTo(result);
+	public void testConditionals(String program, Integer input, Integer expected) {
+		CompletableFuture.supplyAsync(() -> {
+			IntcodeComputer ic = new IntcodeComputer(program);
+			ic.addInput(input);
+			return ic.processOpcodes();
+		}).thenAccept(result -> assertThat(result.getOutput()).as("Check output").isEqualTo(expected));
 	}
 	
 	@DisplayName("Test Diagnostic with input")
@@ -156,11 +175,12 @@ public class TestIntcodeComputer {
 		"'3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99',8,1000",
 		"'3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99',9,1001"
 	})
-	public void testDiagnosticWithInput(String program, Integer input, Integer result) {
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.enableTestMode();
-		ic.processOpcodes(input);
-		assertThat(ic.getOutput()).as("Check output").isEqualTo(result);
+	public void testDiagnosticWithInput(String program, Integer input, Integer expected) {
+		CompletableFuture.supplyAsync(() -> {
+			IntcodeComputer ic = new IntcodeComputer(program);
+			ic.addInput(input);
+			return ic.processOpcodes();
+		}).thenAccept(result -> assertThat(result.getOutput()).as("Check output").isEqualTo(expected));
 	}
 	
 	@DisplayName("Tests from Reddit")
@@ -170,10 +190,10 @@ public class TestIntcodeComputer {
 		"'101,-1,7,7,4,7,1105,11,0,99',0"
 	})
 	public void testReddit(String program, Integer expectedResult) {
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.enableTestMode();
-		ic.processOpcodes();
-		assertThat(ic.getOutput()).as("Check result").isEqualTo(expectedResult);
+		CompletableFuture.supplyAsync(() -> {
+			IntcodeComputer ic = new IntcodeComputer(program);
+			return ic.processOpcodes();
+		}).thenAccept(result -> assertThat(result.getOutput()).as("Check result").isEqualTo(expectedResult));
 	}
 	
 	@DisplayName("Invalid opcode error")
@@ -183,7 +203,6 @@ public class TestIntcodeComputer {
 	})
 	public void testInvalidOpcode(String program, Integer expectedResult) {
 		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.enableTestMode();
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> {
 			ic.processOpcodes();
 		});
@@ -191,25 +210,29 @@ public class TestIntcodeComputer {
 	
 	@Test
 	public void testQueuedInput() {
-		String program = "3,11,3,12,1,11,12,13,4,13,99,-1,-1,-1";
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.addInput(1);
-		ic.addInput(2);
-		ic.setOutputMode(OutputMode.SAVE);
-		ic.processOpcodes();
-		assertThat(ic.getOutput()).as("1 + 2 = 3").isEqualTo(3);
-		assertThat(ic.isTerminated()).as("Is terminated?").isTrue();
+		CompletableFuture.supplyAsync(() -> {
+			String program = "3,11,3,12,1,11,12,13,4,13,99,-1,-1,-1";
+			IntcodeComputer ic = new IntcodeComputer(program);
+			ic.addInput(1);
+			ic.addInput(2);
+			return ic.processOpcodes();
+		}).thenAccept(result -> {
+			assertThat(result.getOutput()).as("1 + 2 = 3").isEqualTo(3);
+			assertThat(result.isTerminated()).as("Is terminated?").isTrue();
+		});
 	}
 	
 	@DisplayName("Test save and exit")
 	@Test
 	public void testSaveExit() {
+		CompletableFuture.supplyAsync(() -> {
 		String program = "1101,2,2,11,4,11,1101,3,3,11,99,-1";
-		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.setOutputMode(OutputMode.SAVEANDEXIT);
-		ic.processOpcodes();
-		assertThat(ic.isTerminated()).as("Is Terminated?").isFalse();
-		assertThat(ic.getOutput()).as("Output").isEqualTo(4);
+			IntcodeComputer ic = new IntcodeComputer(program);
+			return ic.processOpcodes();
+		}).thenAccept(result -> {
+		assertThat(result.isTerminated()).as("Is Terminated?").isFalse();
+		assertThat(result.getOutput()).as("Output").isEqualTo(4);
+		});
 	}
 	
 	@DisplayName("Test save, exit & resume")
@@ -217,13 +240,16 @@ public class TestIntcodeComputer {
 	public void testSaveExitResume() {
 		String program = "1101,2,2,15,4,15,3,15,1001,15,3,15,4,15,99,-1";
 		IntcodeComputer ic = new IntcodeComputer(program);
-		ic.setOutputMode(OutputMode.SAVEANDEXIT);
-		ic.processOpcodes();
-		assertThat(ic.isTerminated()).as("Is Terminated?").isFalse();
-		assertThat(ic.getOutput()).as("Output").isEqualTo(4);
-		ic.addInput(ic.getOutput());
-		ic.processOpcodes();
-		assertThat(ic.getOutput()).as("Output after resumed").isEqualTo(7);
-		assertThat(ic.isTerminated()).as("Is Terminated").isTrue();
+		CompletableFuture.supplyAsync(() -> ic.processOpcodes())
+		.thenAccept(result -> {
+			assertThat(result.getOutput()).as("Output").isEqualTo(4);
+			assertThat(result.isTerminated()).as("Is Terminated").isFalse();
+			ic.addInput(result.getOutput());
+		});
+		CompletableFuture.supplyAsync(() -> ic.processOpcodes())
+		.thenAccept(result -> {
+			assertThat(result.getOutput()).as("Output after resumed").isEqualTo(7);
+			assertThat(result.isTerminated()).as("Is Terminated").isTrue();
+		});
 	}
 }

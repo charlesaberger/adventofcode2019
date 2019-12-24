@@ -3,7 +3,6 @@ package thebergers.adventofcode2019.intcodecomputer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -15,11 +14,9 @@ public class IntcodeComputer {
 	
 	private final List<Integer> opcodes;
 	
-	private final InstructionBuilder instructionBuilder;
-	
-	private boolean exit = false;
-	
 	private boolean terminated = false;
+	
+	private final InstructionBuilder instructionBuilder;
 	
 	Integer instructionPointer = 0;
 	
@@ -27,20 +24,14 @@ public class IntcodeComputer {
 	
 	private Integer output;
 	
-	private OutputMode outputMode = OutputMode.CONSOLE;
-	
 	public IntcodeComputer(String opcodesStr) {
 		this.opcodes = initialise(opcodesStr);
 		this.instructionBuilder = new InstructionBuilder();
 	}
-
-	public void processOpcodes() {
-		parseInstructions();
-	}
 	
-	public void processOpcodes(Integer input) {
-		this.input.add(input);
+	public IntcodeComputerResult processOpcodes() {
 		parseInstructions();
+		return new IntcodeComputerResult(getResult(), output, terminated);
 	}
 
 	public void setCode(int index, Integer value) {
@@ -51,7 +42,7 @@ public class IntcodeComputer {
 		return opcodes.get(i);
 	}
 
-	public String getResult() {
+	private String getResult() {
 		return opcodes.stream().map(n -> n.toString()).collect(Collectors.joining(","));
 	}
 	
@@ -68,55 +59,22 @@ public class IntcodeComputer {
 		this.input.add(input);
 	}
 	
-	public void setOutputMode(OutputMode outputMode) {
-		this.outputMode = outputMode;
-	}
-	
-	public void enableTestMode() {
-		this.outputMode = OutputMode.TEST;
-	}
-	
-	public Integer getOutput() {
-		switch (outputMode) {
-		case SAVEANDEXIT:
-			
-		case SAVE:
-		case TEST:
-			return output;
-		default:
-			throw new IllegalArgumentException("Not running in test or save output mode!");
-		}
-	}
-	
 	private List<Integer> initialise(String opcodes) {
 		String[] values = opcodes.split(",");
 		List<String> valuesList = Arrays.asList(values);
 		return valuesList.stream().map(Integer::parseInt).collect(Collectors.toList());
 	}
 	
-	public String getNounAndVerb() {
-		return String.format("%d", (opcodes.get(1) * 100) + opcodes.get(2));
-	}
-	
-	public String getNounAndVerb(int nounIndex, int verbIndex) {
-		return String.format("%d", (opcodes.get(nounIndex) * 100) + opcodes.get(verbIndex));
-	}
-	
-	public boolean isTerminated() {
-		return terminated;
-	}
-	
 	private void parseInstructions() {
-		exit = false;
 		while (true) {
 			//LOG.info("{}", opcodes);
 			Instruction instruction = instructionBuilder.build(instructionPointer);
 			//LOG.info("{}", instruction);
 			instruction.process();
-			instructionPointer = instruction.getNextInstructionPointer(instructionPointer);
-			if (exit) {
+			if (instruction.isTerminate()) {
 				return;
 			}
+			instructionPointer = instruction.getNextInstructionPointer(instructionPointer);
 			//LOG.info("nextInstructionPointer={}", instructionPointer);
 		}
 	}
@@ -178,8 +136,8 @@ public class IntcodeComputer {
 	
 	enum ParameterMode {
 		POSITIONAL(0),
-		IMMEDIATE(1),
-		WRITE(-1);
+		IMMEDIATE(1)/*,
+		WRITE(-1)*/;
 		
 		private final int value;
 		
@@ -198,16 +156,9 @@ public class IntcodeComputer {
 			case 1:
 				return IMMEDIATE;
 			default:
-				return WRITE;
+				throw new IllegalArgumentException(String.format("Unknown ParameterMode: %s", value));
 			}
 		}
-	}
-	
-	public enum OutputMode {
-		CONSOLE,
-		SAVE,
-		SAVEANDEXIT,
-		TEST
 	}
 	
 	public Parameter getParameterInstance(ParameterMode mode, Integer value) {
@@ -481,12 +432,14 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer calculate() {
-			if (!input.isEmpty()) {
-				return input.remove(0);
+			while (input.isEmpty()) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					LOG.warn("Interrupted!");
+				}
 			}
-			try (Scanner scanner = new Scanner(System.in)) {
-				return scanner.nextInt();
-			}
+			return input.remove(0);
 		}
 
 		@Override
@@ -529,16 +482,7 @@ public class IntcodeComputer {
 
 		@Override
 		protected void outputResult() {
-			switch (outputMode) {
-			case SAVEANDEXIT:
-				exit = true;
-			case SAVE:
-			case TEST:
-				output = result;
-				return;
-			default:
-				System.out.println(result);
-			}
+			output = result;
 		}
 	}
 	
@@ -739,7 +683,7 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer calculate() {
-			exit = true;
+			//exit = true;
 			terminated = true;
 			return null;
 		}
