@@ -33,4 +33,10 @@ public class ImageLayer {
 	public ImageRow getRow(int i) {
 		return rows.get(i - 1);
 	}
+
+	public long countDigit(Integer value) {
+		return rows.stream()
+				.mapToLong(row -> row.countDigit(value))
+				.sum();
+	}
 }

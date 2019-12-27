@@ -30,4 +30,8 @@ public class ImageRow {
 	public String getPixelsString() {
 		return pixels.stream().map(pixel -> Integer.toString(pixel)).collect(Collectors.joining());
 	}
+	
+	public long countDigit(Integer value) {
+		return pixels.stream().filter(pixel -> pixel.equals(value)).count();
+	}
 }

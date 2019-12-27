@@ -34,5 +34,6 @@ public class TestDay08 {
 		assertThat(imageLayer2Row1.getPixelsString()).as("Layer 2 Row 1 data").isEqualTo("789");
 		ImageRow imageLayer2Row2 = imageLayer2.getRow(2);
 		assertThat(imageLayer2Row2.getPixelsString()).as("Layer 2 Row 2 data").isEqualTo("012");
+		assertThat(imageData.calculateChecksum()).as("Calculate checksum").isEqualTo(1);
 	}
 }
