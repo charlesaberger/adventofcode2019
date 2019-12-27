@@ -10,13 +10,16 @@ public class ImageRow {
 
 	private final Integer width;
 	
-	private List<Integer> pixels;
+	private List<Pixel> pixels;
 
 	public ImageRow(Integer width) {
 		this.width = width;
 	}
-
 	public void addPixel(Integer pixel) {
+		addPixel(Pixel.fromInteger(pixel));
+	}
+
+	public void addPixel(Pixel pixel) {
 		if (CollectionUtils.isEmpty(pixels)) {
 			pixels = new ArrayList<>(width);
 		}
@@ -28,10 +31,13 @@ public class ImageRow {
 	}
 	
 	public String getPixelsString() {
-		return pixels.stream().map(pixel -> Integer.toString(pixel)).collect(Collectors.joining());
+		return pixels.stream().map(pixel -> Integer.toString(pixel.getId())).collect(Collectors.joining());
 	}
 	
 	public long countDigit(Integer value) {
-		return pixels.stream().filter(pixel -> pixel.equals(value)).count();
+		return pixels.stream().filter(pixel -> pixel.getId().equals(value)).count();
+	}
+	public Pixel getPixel(Integer x) {
+		return pixels.get(x - 1);
 	}
 }

@@ -36,4 +36,18 @@ public class TestDay08 {
 		assertThat(imageLayer2Row2.getPixelsString()).as("Layer 2 Row 2 data").isEqualTo("012");
 		assertThat(imageData.calculateChecksum()).as("Calculate checksum").isEqualTo(1);
 	}
+	
+	@DisplayName("Test get final image")
+	@Test
+	public void testParseImageData() {
+		String imageDataStr = "0222112222120000";
+		Integer width = 2;
+		Integer height = 2;
+		ImageData imageData = ImageProcessor.decodeImageData(imageDataStr, width, height);
+		ImageLayer finalImage = imageData.getFinalImage();
+		ImageRow row1 = finalImage.getRow(1);
+		assertThat(row1.getPixelsString()).as("Row 1 data").isEqualTo("01");
+		ImageRow row2 = finalImage.getRow(2);
+		assertThat(row2.getPixelsString()).as("Row 2 data").isEqualTo("10");
+	}
 }

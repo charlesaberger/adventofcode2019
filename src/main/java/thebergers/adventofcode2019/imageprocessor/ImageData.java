@@ -5,9 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.Optional;
-
-import javax.swing.text.LayeredHighlighter;
 
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -55,5 +54,39 @@ public class ImageData {
 		long ones = layer.countDigit(1);
 		long twos = layer.countDigit(2);
 		return ones * twos;
+	}
+
+	public ImageLayer getFinalImage() {
+		ImageLayer image = new ImageLayer(1);
+		ImageRow row = new ImageRow(width);
+		for (int y = 1; y <= height; y++) {
+			for (int x = 1; x <= width; x++) {
+				Pixel pixel = getVisiblePixel(getPixelsAtPoint(x, y));
+				row.addPixel(pixel);
+			}
+			image.addRow(row);
+			row = new ImageRow(width);
+		}
+		return image;
+	}
+	
+	public String getFinalImageAsText() {
+		return getFinalImage().toString().replace("0", " ");
+	}
+	
+	private List<Pixel> getPixelsAtPoint(Integer x, Integer y) {
+		return layers.stream()
+				.map(layer -> layer.getPixelAtPoint(x, y))
+				.collect(Collectors.toList());
+	}
+	
+	private Pixel getVisiblePixel(List<Pixel> pixels) {
+		Optional<Pixel> pixelOpt = pixels.stream()
+				.filter(Pixel::isVisible)
+				.findFirst();
+		if (!pixelOpt.isPresent()) {
+			return Pixel.TRANSPARENT;
+		}
+		return pixelOpt.get();
 	}
 }
