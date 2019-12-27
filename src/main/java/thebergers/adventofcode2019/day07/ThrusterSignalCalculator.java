@@ -2,13 +2,17 @@ package thebergers.adventofcode2019.day07;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import thebergers.adventofcode2019.intcodecomputer.IntcodeComputerBuilder;
 import thebergers.adventofcode2019.intcodecomputer.IntcodeComputerResult;
+import thebergers.adventofcode2019.intcodecomputer.IntcodeComputerRunner;
+import thebergers.adventofcode2019.intcodecomputer.IntcodeComputerRunnerBuilder;
 
 public class ThrusterSignalCalculator {
 	
@@ -18,34 +22,60 @@ public class ThrusterSignalCalculator {
 	
 	private final String program;
 	
-	private Amplifier ampA;
+	private final boolean useFeedback;
 	
-	private Amplifier ampB;
+	private final IntcodeComputerRunner runner;
 	
-	private Amplifier ampC;
-	
-	private Amplifier ampD;
-	
-	private Amplifier ampE;
-	
-	public ThrusterSignalCalculator(String phaseSetting, String program) {
+	public ThrusterSignalCalculator(String phaseSetting, String program, boolean useFeedback) {
 		this.phaseSetting = phaseSetting;
 		this.program = program;
-		buildAmplifiers(phaseSetting);
+		this.useFeedback = useFeedback;
+		this.runner = buildAmplifiers(phaseSetting);
 	}
 
-	private void buildAmplifiers(String phaseSetting) {
+	private IntcodeComputerRunner buildAmplifiers(String phaseSetting) {
+		IntcodeComputerRunnerBuilder builder = IntcodeComputerRunnerBuilder.newInstance();
 		List<Integer> phases = Arrays.asList(phaseSetting.split(","))
-				.stream()
-				.map(Integer::parseInt)
-				.collect(Collectors.toList());
-		ampA = new Amplifier(phases.get(0), program);
-		ampB = new Amplifier(phases.get(1), program);
-		ampC = new Amplifier(phases.get(2), program);
-		ampD = new Amplifier(phases.get(3), program);
-		ampE = new Amplifier(phases.get(4), program);
+			.stream()
+			.map(Integer::parseInt)
+			.collect(Collectors.toList());
+		phases
+			.stream()
+			.map(phase -> {
+				IntcodeComputerBuilder icBuilder = IntcodeComputerBuilder.newInstance()
+				.setSequenceNumber(getSequenceNumber(phases, phase))
+				.setName(getAmpName(phases, phase))
+				.setProgram(program)
+				.addInput(phase)
+				.setConnectsTo(getConnectsTo(phases, phase, useFeedback));
+				if (phases.indexOf(phase) == 0) {
+					icBuilder.addInput(0);
+				}
+				return icBuilder;
+			})
+			.forEach(builder::addBuilder);
+		return builder.build();
 	}
 
+	private Integer getSequenceNumber(List<Integer> phases, Integer phase) {
+		return phases.indexOf(phase) + 1;
+	}
+
+	private String getAmpName(List<Integer> phases, Integer phase) {
+		return String.format("amp%s", (Character.toString((char)(65 + phases.indexOf(phase)))));
+	}
+	
+	private String getConnectsTo(List<Integer> phases, Integer phase, boolean useFeedback) {
+		int connectsToPhaseIndex = phases.indexOf(phase) + 1;
+		if (connectsToPhaseIndex < phases.size()) {
+			return getAmpName(phases, phases.get(connectsToPhaseIndex));
+		}
+		if (useFeedback) {
+			return getAmpName(phases, phases.get(0));
+		}
+		return "";
+	}
+	
 	public String getPhaseSetting() {
 		return phaseSetting;
 	}
@@ -55,30 +85,18 @@ public class ThrusterSignalCalculator {
 	}
 
 	public Integer calculateThrust() throws InterruptedException, ExecutionException {
-		IntcodeComputerResult result;
-		result = ampA.calculateThrust(0);
-		result = ampB.calculateThrust(result.getOutput());
-		result = ampC.calculateThrust(result.getOutput());
-		result = ampD.calculateThrust(result.getOutput());
-		return ampE.calculateThrust(result.getOutput()).getOutput();
-	}
-
-	public Integer calculateThrustWithFeedback(Integer input) {
-		LOG.info("Phase setting: {}, starting calculation...", phaseSetting);
-		Integer ampAInput = input;
-		/*while (true) {
-			Integer ampBInput = ampA.calculateThrust(ampAInput);
-			Integer ampCInput = ampB.calculateThrust(ampBInput);
-			Integer ampDInput = ampC.calculateThrust(ampCInput);
-			Integer ampEInput = ampD.calculateThrust(ampDInput);
-			ampAInput = ampE.calculateThrust(ampEInput);
-			if (ampE.isTerminated()) {
-				break;
+		runner.start();
+		CompletableFuture<IntcodeComputerResult> future = CompletableFuture.supplyAsync(() -> {
+			try {
+				return runner.doProcessing();
+			} catch (InterruptedException e) {
+				LOG.warn("{}", e);
+			} catch (ExecutionException e) {
+				LOG.warn("{}", e);
 			}
-		}*/
-		//Integer result = 0; //ampE.getOutput();
-		//LOG.info("Phase setting: {}, result = {}", phaseSetting, result);
-		//return result;
-		return 0;
+			return IntcodeComputerResult.errorInstance();
+		});
+		IntcodeComputerResult result = future.get();
+		return result.getOutput();
 	}
 }

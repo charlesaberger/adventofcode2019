@@ -24,27 +24,28 @@ public class TestDay07 {
 				.newInstance()
 				.addPhaseSetting(phaseSetting)
 				.setProgram(program)
+				.setUseFeedback(false)
 				.build();
 		assertThat(tsc.calculateMaxThrust()).as("Calculate Max Thrust").isEqualTo(result);
 	}
 	
-	
-	@Disabled("Not ready for testing yet")
 	@DisplayName("Calculate Max Thruster signal pt 2")
 	@ParameterizedTest(name = "{index}: phase setting:{0}, result: {1}, program: {2}")
 	@CsvSource({
-		"'9,8,7,6,5',139629729,'3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5'"/*,
-		"'9,7,8,5,6',18216,'3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10'"*/
+		"'9,8,7,6,5',139629729,'3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5'",
+		"'9,7,8,5,6',18216,'3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10'"
 	})
 	public void testCalcMaxThrusterSignalPart2(String phaseSetting, Integer result, String program) {
 		ThrusterSignalController tsc = ThrusterSignalControllerBuilder
 				.newInstance()
 				.setPhaseSettingRange(5, 9)
 				.setProgram(program)
+				.setUseFeedback(true)
 				.build();
-		assertThat(tsc.calculateMaxThrustWithFeedback()).as("Calculate Max Thrust").isEqualTo(result);
+		assertThat(tsc.calculateMaxThrust()).as("Calculate Max Thrust").isEqualTo(result);
 	}
 	
+	@Disabled
 	@DisplayName("Generate phase settings")
 	@ParameterizedTest(name ="{index}: rangeStart: {0}, rangeEnd: {1}")
 	@CsvSource({

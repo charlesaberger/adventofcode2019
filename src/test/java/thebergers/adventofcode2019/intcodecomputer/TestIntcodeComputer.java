@@ -26,13 +26,16 @@ public class TestIntcodeComputer {
 		"'1101,100,-1,4,0','1101,100,-1,4,99'"
 	})
 	public void testAddAndMultiply(String input, String output) throws Exception {
-		CompletableFuture.supplyAsync(() -> {
-			IntcodeComputer ic = new IntcodeComputer(input);
-			return ic.processOpcodes();
-		}).thenAccept(result -> {
-			assertThat(result.getResult()).as("Check output").isEqualTo(output);
-			assertThat(result.isTerminated()).as("Is Terminated").isTrue();
-		});
+		IntcodeComputerRunner runner = IntcodeComputerRunnerBuilder
+				.newInstance()
+				.addBuilder(
+					IntcodeComputerBuilder.newInstance()
+					.setName("Simple IntcodeComputer")
+					.setProgram(input))
+				.build();
+		IntcodeComputerResult result = runner.doProcessing();
+		assertThat(result.getResult()).as("Check output").isEqualTo(output);
+		assertThat(result.isTerminated()).as("Is Terminated").isTrue();
 	}
 	
 	@DisplayName("Test Intcode computer input opcode")
@@ -69,10 +72,10 @@ public class TestIntcodeComputer {
 	
 	@DisplayName("Find noun and verb that comprise a result")
 	@Test
-	public void testGetNounAndVerb() {
+	public void testGetNounAndVerb() throws Exception {
+		String program = "0,12,2,0,99";
 		CompletableFuture.supplyAsync(() -> {
-			String opcodes = "0,12,2,0,99";
-			IntcodeComputer ic = new IntcodeComputer(opcodes);
+			IntcodeComputer ic = new IntcodeComputer(program);
 			return ic.processOpcodes();
 		}).thenAccept(result -> {
 			assertThat(result.getNounAndVerb()).as("Check noun and verb").isEqualTo("1202");
@@ -230,8 +233,8 @@ public class TestIntcodeComputer {
 			IntcodeComputer ic = new IntcodeComputer(program);
 			return ic.processOpcodes();
 		}).thenAccept(result -> {
-		assertThat(result.isTerminated()).as("Is Terminated?").isFalse();
-		assertThat(result.getOutput()).as("Output").isEqualTo(4);
+			assertThat(result.isTerminated()).as("Is Terminated?").isFalse();
+			assertThat(result.getOutput()).as("Output").isEqualTo(4);
 		});
 	}
 	

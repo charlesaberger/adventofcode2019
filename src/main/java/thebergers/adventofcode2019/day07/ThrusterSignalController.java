@@ -6,8 +6,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ThrusterSignalController {
 
+	private static final Logger LOG = LoggerFactory.getLogger(ThrusterSignalController.class);
+	
 	private Map<String, ThrusterSignalCalculator> calculators;
 	
 	public Integer calculateMaxThrust() {
@@ -18,9 +23,9 @@ public class ThrusterSignalController {
 					try {
 						return entry.getValue().calculateThrust();
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						LOG.warn("{}", e);
 					} catch (ExecutionException e) {
-						e.printStackTrace();
+						LOG.warn("{}", e);
 					}
 					return -1;
 				})
@@ -37,19 +42,5 @@ public class ThrusterSignalController {
 			calculators = new HashMap<>();
 		}
 		calculators.put(calculator.getPhaseSetting(), calculator);
-	}
-
-	public Integer calculateMaxThrustWithFeedback() {
-		Optional<Integer> maxThrust = calculators
-				.entrySet()
-				.stream()
-				//.parallelStream()
-				.map(entry -> entry.getValue().calculateThrustWithFeedback(0))
-				.sorted(Comparator.reverseOrder())
-				.findFirst();
-		if (maxThrust.isPresent()) {
-			return maxThrust.get();
-		}
-		throw new RuntimeException("Unable to determine max thrust!");
 	}
 }

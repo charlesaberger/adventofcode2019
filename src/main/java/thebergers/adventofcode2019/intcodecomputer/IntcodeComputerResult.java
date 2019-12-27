@@ -1,20 +1,31 @@
 package thebergers.adventofcode2019.intcodecomputer;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 public class IntcodeComputerResult {
 
+	private final Integer sequenceNumber;
+	
+	private final String name;
+	
 	private final String result;
 	
 	private final Integer output;
 	
 	private boolean terminated;
 	
-	public IntcodeComputerResult(String result, Integer output, boolean terminated) {
+	public IntcodeComputerResult(Integer sequenceNumber, String name, String result, Integer output, boolean terminated) {
+		this.sequenceNumber = sequenceNumber;
+		this.name =name; 
 		this.result = result;
 		this.output = output;
 		this.terminated = terminated;
+	}
+	
+	public Integer getSequenceNumber() {
+		return sequenceNumber;
+	}
+	
+	public String getName() {
+		return name;
 	}
 	
 	public Integer getOutput() {
@@ -44,5 +55,14 @@ public class IntcodeComputerResult {
 	
 	private String[] getOpcodes() {
 		return result.split(",");
+	}
+	
+	public static IntcodeComputerResult errorInstance() {
+		return new IntcodeComputerResult(0, "", "", -1, true);
+	}
+	
+	public String toString() {
+		return String.format("IntcodeComputerResult: seqNum=%d, name=%s, value = %d, terminated = %s",
+				sequenceNumber, name, output, terminated);
 	}
 }

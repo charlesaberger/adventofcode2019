@@ -15,6 +15,8 @@ public class ThrusterSignalControllerBuilder {
 	private Integer rangeEnd = -1;
 	
 	private String program;
+	
+	private boolean useFeedback = false;
 
 	public ThrusterSignalControllerBuilder addPhaseSetting(String phaseSetting) {
 		phaseSettings.add(phaseSetting);
@@ -27,6 +29,11 @@ public class ThrusterSignalControllerBuilder {
 
 	public ThrusterSignalControllerBuilder setProgram(String program) {
 		this.program = program;
+		return this;
+	}
+	
+	public ThrusterSignalControllerBuilder setUseFeedback(boolean useFeedback) {
+		this.useFeedback = useFeedback;
 		return this;
 	}
 
@@ -44,7 +51,7 @@ public class ThrusterSignalControllerBuilder {
 		}
 		phaseSettings
 		.stream()
-		.map(phase ->  new ThrusterSignalCalculator(phase, program))
+		.map(phase ->  new ThrusterSignalCalculator(phase, program, useFeedback))
 		.forEach(controller::addThrusterSignalCalculator);
 		return controller;
 	}
