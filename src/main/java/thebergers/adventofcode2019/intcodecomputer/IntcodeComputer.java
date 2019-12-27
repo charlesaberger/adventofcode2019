@@ -1,106 +1,117 @@
-package thebergers.adventofcode2019.day02;
+package thebergers.adventofcode2019.intcodecomputer;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IntcodeComputer {
+public class IntcodeComputer implements Runnable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(IntcodeComputer.class);
 	
 	private final List<Integer> opcodes;
 	
+	private final String name;
+	
+	private final Integer sequenceNumber;
+	
+	private boolean terminated = false;
+	
 	private final InstructionBuilder instructionBuilder;
 	
-	private Optional<Integer> input;
+	Integer instructionPointer = 0;
+	
+	private BlockingQueue<Integer> input = new LinkedBlockingQueue<>();
+	
+	private PropertyChangeSupport support;
 	
 	private Integer output;
 	
-	private boolean testMode = false;
-	
 	public IntcodeComputer(String opcodesStr) {
+		this.sequenceNumber = 1;
+		this.name = "IntcodeComputer";
 		this.opcodes = initialise(opcodesStr);
 		this.instructionBuilder = new InstructionBuilder();
 	}
-
-	public void processOpcodes() {
-		this.input = Optional.empty();
-		parseInstructions();
+	
+	public IntcodeComputer(Integer sequenceNumber, String name, String opcodesStr) {
+		this.sequenceNumber = sequenceNumber;
+		this.name = name;
+		this.opcodes = initialise(opcodesStr);
+		this.instructionBuilder = new InstructionBuilder();
 	}
 	
-	public void processOpcodes(Integer input) {
-		this.input = Optional.of(input);
+	public IntcodeComputerResult processOpcodes() {
 		parseInstructions();
+		return new IntcodeComputerResult(sequenceNumber, name, getResult(), output, terminated);
 	}
 
 	public void setCode(int index, Integer value) {
 		opcodes.set(index, value);
 	}
-
-	public Integer getPosition(int i) {
-		return opcodes.get(i);
+	
+	public String getName() {
+		return name;
 	}
 
-	public String getResult() {
+	private String getResult() {
 		return opcodes.stream().map(n -> n.toString()).collect(Collectors.joining(","));
 	}
 	
 	public void reset() {
 		opcodes.clear();
+		this.instructionPointer = 0;
 	}
 	
 	public void reset(String opcodesStr) {
 		reset();
 		this.opcodes.addAll(initialise(opcodesStr));
 	}
-	
-	public void enableTestMode() {
-		this.testMode = true;
+
+	public void addInput(Integer input) {
+		this.input.add(input);
 	}
 	
-	public boolean isTestMode() {
-		return testMode;
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		support.addPropertyChangeListener(listener);
 	}
 	
-	public Integer getOutput() {
-		if (isTestMode()) { 
-			return output;
+	@Override
+	public void run() {
+		parseInstructions();
+		IntcodeComputerResult computedResult = new IntcodeComputerResult(sequenceNumber, name,
+				getResult(), output, terminated);
+		if (support.getPropertyChangeListeners().length > 0) {
+			LOG.info("{} sending output {}...", name, computedResult);
+			support.firePropertyChange("result", IntcodeComputerResult.errorInstance(), computedResult);
 		}
-		throw new IllegalArgumentException("Not running in test mode!");
 	}
-	
+
 	private List<Integer> initialise(String opcodes) {
+		this.support = new PropertyChangeSupport(this);
 		String[] values = opcodes.split(",");
 		List<String> valuesList = Arrays.asList(values);
 		return valuesList.stream().map(Integer::parseInt).collect(Collectors.toList());
 	}
-	
-	public String getNounAndVerb() {
-		return String.format("%d", (opcodes.get(1) * 100) + opcodes.get(2));
-	}
-	
-	public String getNounAndVerb(int nounIndex, int verbIndex) {
-		return String.format("%d", (opcodes.get(nounIndex) * 100) + opcodes.get(verbIndex));
-	}
-	
+
 	private void parseInstructions() {
-		int instructionPointer = 0;
 		while (true) {
-			LOG.info("{}", opcodes);
+			//LOG.info("{}", opcodes);
 			Instruction instruction = instructionBuilder.build(instructionPointer);
-			LOG.info("{}", instruction);
+			//LOG.info("{}: {}", name, instruction);
+			instruction.process();
 			if (instruction.isTerminate()) {
 				return;
 			}
-			instruction.process();
 			instructionPointer = instruction.getNextInstructionPointer(instructionPointer);
-			LOG.info("nextInstructionPointer={}", instructionPointer);
+			//LOG.info("nextInstructionPointer={}", instructionPointer);
 		}
 	}
 
@@ -161,8 +172,7 @@ public class IntcodeComputer {
 	
 	enum ParameterMode {
 		POSITIONAL(0),
-		IMMEDIATE(1),
-		WRITE(-1);
+		IMMEDIATE(1);
 		
 		private final int value;
 		
@@ -181,7 +191,7 @@ public class IntcodeComputer {
 			case 1:
 				return IMMEDIATE;
 			default:
-				return WRITE;
+				throw new IllegalArgumentException(String.format("Unknown ParameterMode: %s", value));
 			}
 		}
 	}
@@ -400,7 +410,7 @@ public class IntcodeComputer {
 		@Override
 		protected void outputResult() {
 			Integer resultPosition = getResultPosition();
-			LOG.info("Writing value {} to position {}", result, resultPosition);
+			//LOG.info("Writing value {} to position {}", result, resultPosition);
 			opcodes.set(resultPosition, result);
 		}
 	}
@@ -457,12 +467,15 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer calculate() {
-			if (input.isPresent()) {
-				return input.get();
+			LOG.info("{}: looking for input", name);
+			try {
+				Integer val = input.take();
+				LOG.info("{} received value {}", name, val);
+				return val;
+			} catch (InterruptedException e) {
+				LOG.warn("{}", e);
 			}
-			try (Scanner scanner = new Scanner(System.in)) {
-				return scanner.nextInt();
-			}
+			return null;
 		}
 
 		@Override
@@ -473,7 +486,7 @@ public class IntcodeComputer {
 		@Override
 		protected void outputResult() {
 			Integer resultPosition = getResultPosition();
-			LOG.info("Writing value {} to position {}", result, resultPosition);
+			//LOG.info("Writing value {} to position {}", result, resultPosition);
 			opcodes.set(resultPosition, result);
 		}
 	}
@@ -505,11 +518,14 @@ public class IntcodeComputer {
 
 		@Override
 		protected void outputResult() {
-			if (isTestMode()) {
-				output = result;
-				return;
+			output = result;
+			//LOG.info("{} outputting {}", name, output);
+			if (support.getPropertyChangeListeners().length > 0) {
+				IntcodeComputerResult computedResult =
+						new IntcodeComputerResult(sequenceNumber, name, getResult(), output, terminated);
+				//LOG.info("{} sending output {}...", name, computedResult);
+				support.firePropertyChange("result", IntcodeComputerResult.errorInstance(), computedResult);
 			}
-			System.out.println(result);
 		}
 	}
 	
@@ -542,11 +558,11 @@ public class IntcodeComputer {
 			Parameter param2 = parameters.get(1);
 			Integer param2Value = param2.getValue();
 			if (param1Value > 0) {
-				LOG.info("{} > 0: jumping to {}", param1Value, param2Value);
+				//LOG.info("{} > 0: jumping to {}", param1Value, param2Value);
 				return param2Value;
 			}
 			Integer nextPtr = super.getNextInstructionPointer(instructionPointer);
-			LOG.info("{} <= 0: next instruction pointer is: {}", param1Value, nextPtr);
+			//LOG.info("{} <= 0: next instruction pointer is: {}", param1Value, nextPtr);
 			return nextPtr;
 		}
 
@@ -597,11 +613,11 @@ public class IntcodeComputer {
 			Parameter param2 = parameters.get(1);
 			Integer param2Value = param2.getValue();
 			if (param1Value.equals(0)) {
-				LOG.info("{} = 0, jumping to instruction {}", param1Value, param2Value);
+				//LOG.info("{} = 0, jumping to instruction {}", param1Value, param2Value);
 				return param2Value;
 			}
 			Integer nextPtr = super.getNextInstructionPointer(instructionPointer);
-			LOG.info("{} != 0: next instruction is {}", param1Value, nextPtr);
+			//LOG.info("{} != 0: next instruction is {}", param1Value, nextPtr);
 			return nextPtr;
 		}
 
@@ -655,7 +671,7 @@ public class IntcodeComputer {
 		@Override
 		protected void outputResult() {
 			Integer resultPosition = getResultPosition();
-			LOG.info("Writing value {} to position {}", result, resultPosition);
+			//LOG.info("Writing value {} to position {}", result, resultPosition);
 			opcodes.set(resultPosition, result);
 		}
 	}
@@ -710,6 +726,7 @@ public class IntcodeComputer {
 
 		@Override
 		protected Integer calculate() {
+			terminated = true;
 			return null;
 		}
 

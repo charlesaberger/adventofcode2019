@@ -2,7 +2,7 @@ package thebergers.adventofcode2019.day05;
 
 import java.io.IOException;
 
-import thebergers.adventofcode2019.day02.IntcodeComputer;
+import thebergers.adventofcode2019.intcodecomputer.IntcodeComputer;
 import thebergers.adventofcode2019.utils.Utils;
 
 public class Day5Part1 {
