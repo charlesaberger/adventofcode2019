@@ -255,4 +255,18 @@ public class TestIntcodeComputer {
 			assertThat(result.isTerminated()).as("Is Terminated").isTrue();
 		});
 	}
+	
+	@DisplayName("Test Relative Parameters & memory extension")
+	@ParameterizedTest(name = "{index}: program: {0}, expected: {1}")
+	@CsvSource({
+		"'109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99','109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99'"
+	})
+	public void testDay09Pt1(String program, String expected) throws Exception {
+		IntcodeComputerRunner runner = IntcodeComputerRunnerBuilder.newInstance()
+				.addBuilder(IntcodeComputerBuilder.newInstance()
+						.setProgram(program))
+				.build();
+		IntcodeComputerResult result = runner.doProcessing();
+		assertThat(result.getOutput()).as("Check output").isEqualTo(expected);
+	}
 }

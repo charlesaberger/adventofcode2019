@@ -26,7 +26,9 @@ public class IntcodeComputer implements Runnable {
 	
 	private final InstructionBuilder instructionBuilder;
 	
-	Integer instructionPointer = 0;
+	private Integer relativeBase = 0;
+	
+	private Integer instructionPointer = 0;
 	
 	private BlockingQueue<Integer> input = new LinkedBlockingQueue<>();
 	
@@ -124,6 +126,7 @@ public class IntcodeComputer implements Runnable {
 		JUMPIFFALSE(6, 2),
 		LESSTHAN(7, 3),
 		EQUALS(8, 3),
+		UPDATERELATIVEBASE(9, 1),
 		TERMINATE(99, 0);
 		
 		private final int value;
@@ -162,6 +165,8 @@ public class IntcodeComputer implements Runnable {
 				return LESSTHAN;
 			case 8:
 				return EQUALS;
+			case 9:
+				return UPDATERELATIVEBASE;
 			case 99:
 				return TERMINATE;
 			default:
@@ -172,7 +177,8 @@ public class IntcodeComputer implements Runnable {
 	
 	enum ParameterMode {
 		POSITIONAL(0),
-		IMMEDIATE(1);
+		IMMEDIATE(1),
+		RELATIVE(2);
 		
 		private final int value;
 		
@@ -190,6 +196,8 @@ public class IntcodeComputer implements Runnable {
 				return POSITIONAL;
 			case 1:
 				return IMMEDIATE;
+			case 2:
+				return RELATIVE;
 			default:
 				throw new IllegalArgumentException(String.format("Unknown ParameterMode: %s", value));
 			}
@@ -202,6 +210,8 @@ public class IntcodeComputer implements Runnable {
 			return new PositionalParameter(value);
 		case IMMEDIATE:
 			return new ImmediateParameter(value);
+		case RELATIVE:
+			return new RelativeParameter(value);
 		default:
 			throw new IllegalArgumentException(String.format("Unknown ParameterMode: %s",  mode));
 		}
@@ -264,6 +274,19 @@ public class IntcodeComputer implements Runnable {
 		}
 	}
 	
+	class RelativeParameter extends Parameter {
+		
+		RelativeParameter(Integer address) {
+			super(ParameterMode.RELATIVE, address + relativeBase);
+		}
+
+		@Override
+		Integer getValue() {
+			Integer valueAtAddress = getValueAtAddress();
+			return opcodes.get(valueAtAddress);
+		}
+	}
+	
 	class InstructionBuilder {
 		Instruction build(int index) {
 			Integer instructionInt = opcodes.get(index);
@@ -301,6 +324,8 @@ public class IntcodeComputer implements Runnable {
 				return new LessThanInstruction(opcode, index);
 			case EQUALS:
 				return new EqualsInstruction(opcode, index);
+			case UPDATERELATIVEBASE:
+				return new UpdateRelativeBaseInstruction(opcode, index);
 			case TERMINATE:
 				return new TerminateInstruction(opcode, index);
 			default:
@@ -710,6 +735,39 @@ public class IntcodeComputer implements Runnable {
 			Integer resultPosition = getResultPosition();
 			LOG.info("Writing value {} to position {}", result, resultPosition);
 			opcodes.set(resultPosition, result);
+		}
+	}
+	
+	public class UpdateRelativeBaseInstruction extends Instruction {
+
+		protected UpdateRelativeBaseInstruction(OpCode opcode, int index) {
+			super(opcode, index);
+		}
+
+		@Override
+		protected void initialiseParameters() {
+			List<ParameterMode> parameterModes = getParameterModes();
+			for (int i = 1; i <= opcode.numParameters; i++) {
+				if (i > parameterModes.size()) {
+					parameterModes.add(ParameterMode.POSITIONAL);
+				}
+			}
+			setParameters(parameterModes);
+		}
+
+		@Override
+		protected Integer calculate() {
+			return relativeBase + parameters.get(0).getValue();
+		}
+
+		@Override
+		protected Integer getResultPosition() {
+			return null;
+		}
+
+		@Override
+		protected void outputResult() {
+			relativeBase = result;
 		}
 	}
 	
