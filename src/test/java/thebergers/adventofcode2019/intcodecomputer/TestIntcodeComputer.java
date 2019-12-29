@@ -256,17 +256,29 @@ public class TestIntcodeComputer {
 		});
 	}
 	
-	@DisplayName("Test Relative Parameters & memory extension")
+	@DisplayName("Test Relative Parameters & memory extension (1)")
 	@ParameterizedTest(name = "{index}: program: {0}, expected: {1}")
 	@CsvSource({
 		"'109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99','109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99'"
 	})
-	public void testDay09Pt1(String program, String expected) throws Exception {
+	public void testDay09Pt1ex1(String program, String expected) throws Exception {
 		IntcodeComputerRunner runner = IntcodeComputerRunnerBuilder.newInstance()
 				.addBuilder(IntcodeComputerBuilder.newInstance()
 						.setProgram(program))
 				.build();
 		IntcodeComputerResult result = runner.doProcessing();
-		assertThat(result.getOutput()).as("Check output").isEqualTo(expected);
+		assertThat(result.getResult()).as("Check result").contains(expected);
+	}
+	
+	@DisplayName("Test Relative Parameters & memory extension (2)")
+	@Test
+	public void testDay09Pt1ex2() throws Exception {
+		String program = "1102,34915192,34915192,7,4,7,99,0";
+		IntcodeComputerRunner runner = IntcodeComputerRunnerBuilder.newInstance()
+				.addBuilder(IntcodeComputerBuilder.newInstance()
+						.setProgram(program))
+				.build();
+		IntcodeComputerResult result = runner.doProcessing();
+		assertThat(result.getOutput().toString().length()).as("Check output").isEqualTo(16);
 	}
 }
