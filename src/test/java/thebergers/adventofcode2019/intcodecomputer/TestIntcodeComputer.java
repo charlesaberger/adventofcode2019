@@ -43,7 +43,7 @@ public class TestIntcodeComputer {
 	@CsvSource({
 		"'3,1,101,1,1,0,99',4,'5,4,101,1,1,0,99'"
 	})
-	public void testInput(String program, Integer input, String expected) {
+	public void testInput(String program, Long input, String expected) {
 		CompletableFuture.supplyAsync(() -> {
 			IntcodeComputer ic = new IntcodeComputer(program);
 			ic.addInput(input);
@@ -59,7 +59,7 @@ public class TestIntcodeComputer {
 	@CsvSource({
 		"'3,0,4,0,99',1,'1,0,4,0,99'"
 	})
-	public void testOutput(String program, Integer input, String expected) {
+	public void testOutput(String program, Long input, String expected) {
 		CompletableFuture.supplyAsync(() -> {
 			IntcodeComputer ic = new IntcodeComputer(program);
 			ic.addInput(input);
@@ -116,7 +116,7 @@ public class TestIntcodeComputer {
 		"'3,3,1105,-1,9,1101,0,0,12,4,12,99,1',0,0",
 		"'3,3,1105,-1,9,1101,0,0,12,4,12,99,1',10,1"
 	})
-	public void testJumpsWithInput(String program, Integer input, Integer expectedResult) {
+	public void testJumpsWithInput(String program, Long input, Integer expectedResult) {
 		CompletableFuture.supplyAsync(() -> {
 			IntcodeComputer ic = new IntcodeComputer(program);
 			ic.addInput(input);
@@ -163,7 +163,7 @@ public class TestIntcodeComputer {
 		"'3,3,1107,-1,8,3,4,3,99',8,0",
 		"'3,3,1107,-1,8,3,4,3,99',7,1"
 	})
-	public void testConditionals(String program, Integer input, Integer expected) {
+	public void testConditionals(String program, Long input, Integer expected) {
 		CompletableFuture.supplyAsync(() -> {
 			IntcodeComputer ic = new IntcodeComputer(program);
 			ic.addInput(input);
@@ -178,7 +178,7 @@ public class TestIntcodeComputer {
 		"'3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99',8,1000",
 		"'3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99',9,1001"
 	})
-	public void testDiagnosticWithInput(String program, Integer input, Integer expected) {
+	public void testDiagnosticWithInput(String program, Long input, Integer expected) {
 		CompletableFuture.supplyAsync(() -> {
 			IntcodeComputer ic = new IntcodeComputer(program);
 			ic.addInput(input);
@@ -216,8 +216,8 @@ public class TestIntcodeComputer {
 		CompletableFuture.supplyAsync(() -> {
 			String program = "3,11,3,12,1,11,12,13,4,13,99,-1,-1,-1";
 			IntcodeComputer ic = new IntcodeComputer(program);
-			ic.addInput(1);
-			ic.addInput(2);
+			ic.addInput(1L);
+			ic.addInput(2L);
 			return ic.processOpcodes();
 		}).thenAccept(result -> {
 			assertThat(result.getOutput()).as("1 + 2 = 3").isEqualTo(3);
@@ -280,5 +280,61 @@ public class TestIntcodeComputer {
 				.build();
 		IntcodeComputerResult result = runner.doProcessing();
 		assertThat(result.getOutput().toString().length()).as("Check output").isEqualTo(16);
+	}
+	
+	@DisplayName("Test Relative Parameters & memory extension (3)")
+	@Test
+	public void testDay09Pt1ex3() throws Exception {
+		String program = "104,1125899906842624,99";
+		IntcodeComputerRunner runner = IntcodeComputerRunnerBuilder.newInstance()
+				.addBuilder(IntcodeComputerBuilder.newInstance()
+						.setProgram(program))
+				.build();
+		IntcodeComputerResult result = runner.doProcessing();
+		assertThat(result.getOutput()).as("Check output").isEqualTo(1125899906842624L);
+	}
+	
+	@DisplayName("Test Relative Parameter input")
+	@ParameterizedTest(name = "{index}: program: {0}, input: {1}, expected: {2}")
+	@CsvSource({
+		/*"'203,3,104,0,99',50,50",
+		"'109,5,203,0,104,0,99',27,27",*/
+		"'209,9,21101,5,6,0,4,8,-1,8',0,11"
+	})
+	public void testRelativeParameterInput(String program, Long input, Long expected) throws Exception {
+		//String program = "203,3,104,0,99";
+		//Long input = 50L;
+		IntcodeComputerRunner runner = IntcodeComputerRunnerBuilder.newInstance()
+				.addBuilder(IntcodeComputerBuilder.newInstance()
+						.setProgram(program)
+						.setName("Test Relative Param Input")
+						.addInput(input))
+				.build();
+		IntcodeComputerResult result = runner.doProcessing();
+		assertThat(result.getOutput()).as("Check output").isEqualTo(expected);
+	}
+	
+	@DisplayName("Tests for Output Parameters from Reddit")
+	@ParameterizedTest(name = "{index}: program: {0}, input: {1}, expected: {2}")
+	@CsvSource({
+		/*"'109,-1,4,1,99',0,-1"
+		,"'109,-1,104,1,99',0,1"
+		,
+		"'109,-1,204,1,99',0,109"
+		,"'109,1,9,2,204,-6,99',0,204"
+		,"'109,1,109,9,204,-6,99',0,204"
+		,"'109,1,209,-1,204,-106,99',0,204"
+		,"'109,1,3,3,204,2,99',2020,2020"
+		,*/"'109,1,203,2,204,2,99',2020,2020"
+	})
+	public void testOutputParametersReddit(String program, Long input, Long expected) throws Exception {
+		IntcodeComputerRunner runner = IntcodeComputerRunnerBuilder.newInstance()
+				.addBuilder(IntcodeComputerBuilder.newInstance()
+						.setProgram(program)
+						.setName("Test Relative Param Input")
+						.addInput(input))
+				.build();
+		IntcodeComputerResult result = runner.doProcessing();
+		assertThat(result.getOutput()).as("Check output").isEqualTo(expected);
 	}
 }

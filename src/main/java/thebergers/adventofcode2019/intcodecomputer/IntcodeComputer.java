@@ -27,15 +27,15 @@ public class IntcodeComputer implements Runnable {
 	
 	private final InstructionBuilder instructionBuilder;
 	
-	private Integer relativeBase = 0;
+	private Long relativeBase = 0L;
 	
-	private Integer instructionPointer = 0;
+	private Long instructionPointer = 0L;
 	
-	private BlockingQueue<Integer> input = new LinkedBlockingQueue<>();
+	private BlockingQueue<Long> input = new LinkedBlockingQueue<>();
 	
 	private PropertyChangeSupport support;
 	
-	private Integer output;
+	private Long output;
 	
 	public IntcodeComputer(String opcodesStr) {
 		this.sequenceNumber = 1;
@@ -60,10 +60,10 @@ public class IntcodeComputer implements Runnable {
 		return new IntcodeComputerResult(sequenceNumber, name, getResult(), output, terminated);
 	}
 
-	public void setCode(int index, Integer value) {
+	public void setCode(Long index, Long value) {
 		program.setOpcode(index, value);
 	}
-	
+
 	public String getName() {
 		return name;
 	}
@@ -74,16 +74,16 @@ public class IntcodeComputer implements Runnable {
 	
 	public void reset() {
 		program.reset();
-		this.instructionPointer = 0;
+		this.instructionPointer = 0L;
 	}
 	
 	public void reset(String opcodesStr) {
 		program.reset();
 		program.initialise(opcodesStr);
-		this.instructionPointer = 0;
+		this.instructionPointer = 0L;
 	}
 
-	public void addInput(Integer input) {
+	public void addInput(Long input) {
 		this.input.add(input);
 	}
 	
@@ -125,7 +125,7 @@ public class IntcodeComputer implements Runnable {
 	
 	private class Program {
 		
-		private  List<Integer> opcodes;
+		private  List<Long> opcodes;
 		
 		Program() {
 			this.opcodes = new ArrayList<>();
@@ -134,34 +134,43 @@ public class IntcodeComputer implements Runnable {
 		void initialise(String opcodesStr) {
 			String[] values = opcodesStr.split(",");
 			List<String> valuesList = Arrays.asList(values);
-			program.setOpcode(valuesList.stream().map(Integer::parseInt).collect(Collectors.toList()));
+			program.setOpcode(valuesList.stream().map(Long::parseLong).collect(Collectors.toList()));
 		}
 		
-		void setOpcode(List<Integer> opcodes) {
+		void setOpcode(List<Long> opcodes) {
 			this.opcodes.addAll(opcodes);
 		}
 		
-		void setOpcode(int address, Integer value) {
+		void setOpcode(Long addressLong, Long value) {
+			int address = convertLongToInt(addressLong);
 			if (address > opcodes.size()) {
 				extendMemoryTo(address);
 			}
 			this.opcodes.set(address, value);
 		}
 
-		Integer getOpcode(int address) {
-			if (address > opcodes.size()) {
-				extendMemoryTo(address);
+		Long getOpcode(Long instructionPointerLong) {
+			int instructionPointerInt = convertLongToInt(instructionPointerLong);
+			if (instructionPointerInt > opcodes.size()) {
+				extendMemoryTo(instructionPointerInt);
 			}
-			return opcodes.get(address);
+			return opcodes.get(instructionPointerInt);
 		}
 		
 		void reset() {
 			opcodes.clear();
 		}
 		
-		private void extendMemoryTo(int address) {
-			IntStream.range(0, address - opcodes.size() + 1)
-			.forEach(value -> { boolean added = opcodes.add(0); });
+		private void extendMemoryTo(Integer instructionPointer) {
+			IntStream.range(0, instructionPointer - opcodes.size() + 1)
+			.forEach(value -> { boolean added = opcodes.add(0L); });
+		}
+		
+		private int convertLongToInt(Long index) {
+			if (index > Integer.MAX_VALUE) {
+				throw new IllegalArgumentException(String.format("Index value %d is too large!", index));
+			}
+			return Math.toIntExact(index);
 		}
 		
 		/*public void reset(String opcodesStr) {
@@ -260,7 +269,7 @@ public class IntcodeComputer implements Runnable {
 		}
 	}
 	
-	public Parameter getParameterInstance(ParameterMode mode, Integer value) {
+	public Parameter getParameterInstance(ParameterMode mode, Long value) {
 		switch(mode) {
 		case POSITIONAL:
 			return new PositionalParameter(value);
@@ -277,9 +286,9 @@ public class IntcodeComputer implements Runnable {
 		
 		private final ParameterMode mode;
 		
-		protected final Integer address;
+		protected final Long address;
 		
-		private Parameter(ParameterMode mode, Integer address) {
+		private Parameter(ParameterMode mode, Long address) {
 			this.mode = mode;
 			this.address = address;
 		}
@@ -288,15 +297,15 @@ public class IntcodeComputer implements Runnable {
 			return mode;
 		}
 		
-		public Integer getAddress() {
+		public Long getAddress() {
 			return address;
 		}
 		
-		public Integer getValueAtAddress() {
+		public Long getValueAtAddress() {
 			return program.getOpcode(address); //opcodes.get(address);
 		}
 		
-		abstract Integer getValue();
+		abstract Long getValue();
 
 		@Override
 		public String toString() {
@@ -307,48 +316,71 @@ public class IntcodeComputer implements Runnable {
 	
 	class PositionalParameter extends Parameter {
 		
-		PositionalParameter(Integer address) {
+		PositionalParameter(Long address) {
 			super(ParameterMode.POSITIONAL, address);
 		}
 
 		@Override
-		Integer getValue() {
-			Integer valueAtAddress = getValueAtAddress();
+		Long getValue() {
+			Long valueAtAddress = getValueAtAddress();
 			return program.getOpcode(valueAtAddress); //opcodes.get(valueAtAddress);
 		}
 	}
 	
 	class ImmediateParameter extends Parameter {
 		
-		ImmediateParameter(Integer address) {
+		ImmediateParameter(Long address) {
 			super(ParameterMode.IMMEDIATE, address);
 		}
 
 		@Override
-		Integer getValue() {
+		Long getValue() {
 			return getValueAtAddress();
 		}
 	}
 	
 	class RelativeParameter extends Parameter {
 		
-		RelativeParameter(Integer address) {
-			super(ParameterMode.RELATIVE, address + relativeBase);
+		//private final Long derivedAddress;
+		
+		RelativeParameter(Long value) {
+			super(ParameterMode.RELATIVE, value);
+			//this.derivedAddress = address + relativeBase;
 		}
 
 		@Override
-		Integer getValue() {
-			Integer valueAtAddress = getValueAtAddress();
-			return program.getOpcode(valueAtAddress); //opcodes.get(valueAtAddress);
+		Long getValue() {
+			Long valueAddress = getValueAtAddress();
+			Long derivedAddress = valueAddress + relativeBase;
+			Long derivedAddressValue = program.getOpcode(derivedAddress);
+			LOG.info("address: {}, valueAddress: {}, relativeBase: {}, derivedAddress: {}, value: {}, getValueAtAddress(): {}",
+					address, valueAddress, relativeBase, derivedAddress, derivedAddressValue, getValueAtAddress());
+			return derivedAddressValue; //opcodes.get(valueAtAddress);
+		}
+
+		@Override
+		public Long getAddress() {
+			return getValueAtAddress() + relativeBase;
+		}
+
+		/*@Override
+		public Long getValueAtAddress() {
+			return program.getOpcode(getAddress());
+		}*/
+
+		@Override
+		public String toString() {
+			return "Parameter [mode=" + super.mode + ", addr=" + address + ", relativeBase=" + relativeBase +
+					/*", derivedAddress=" + derivedAddress +*/ ", value()=" + getValue() + "]";
 		}
 	}
 	
 	class InstructionBuilder {
-		Instruction build(int index) {
-			Integer instructionInt = program.getOpcode(index); //opcodes.get(index);
+		Instruction build(Long instructionPointer) {
+			Long instructionInt = program.getOpcode(instructionPointer); //opcodes.get(index);
 			char[] instructionChars = instructionInt.toString().toCharArray();
 			OpCode opcode = parseOpcode(instructionChars);
-			Instruction instruction = getInstruction(opcode, index);
+			Instruction instruction = getInstruction(opcode, instructionPointer);
 			instruction.initialiseParameters();
 			return instruction;
 		}
@@ -362,28 +394,28 @@ public class IntcodeComputer implements Runnable {
 			return OpCode.getInstance(Integer.parseInt(opCodeStr));
 		}
 		
-		private Instruction getInstruction(OpCode opcode, int index) {
+		private Instruction getInstruction(OpCode opcode, Long instructionPointer) {
 			switch (opcode) {
 			case ADD:
-				return new AddInstruction(opcode, index);
+				return new AddInstruction(opcode, instructionPointer);
 			case MULTIPLY:
-				return new MultiplyInstruction(opcode, index);
+				return new MultiplyInstruction(opcode, instructionPointer);
 			case INPUT:
-				return new InputInstruction(opcode, index);
+				return new InputInstruction(opcode, instructionPointer);
 			case OUTPUT:
-				return new OutputInstruction(opcode, index);
+				return new OutputInstruction(opcode, instructionPointer);
 			case JUMPIFTRUE:
-				return new JumpIfTrueInstruction(opcode, index);
+				return new JumpIfTrueInstruction(opcode, instructionPointer);
 			case JUMPIFFALSE:
-				return new JumpIfFalseInstruction(opcode, index);
+				return new JumpIfFalseInstruction(opcode, instructionPointer);
 			case LESSTHAN:
-				return new LessThanInstruction(opcode, index);
+				return new LessThanInstruction(opcode, instructionPointer);
 			case EQUALS:
-				return new EqualsInstruction(opcode, index);
+				return new EqualsInstruction(opcode, instructionPointer);
 			case UPDATERELATIVEBASE:
-				return new UpdateRelativeBaseInstruction(opcode, index);
+				return new UpdateRelativeBaseInstruction(opcode, instructionPointer);
 			case TERMINATE:
-				return new TerminateInstruction(opcode, index);
+				return new TerminateInstruction(opcode, instructionPointer);
 			default:
 				throw new IllegalArgumentException(String.format("Unknown OpCode: %s", opcode));
 			}
@@ -392,13 +424,13 @@ public class IntcodeComputer implements Runnable {
 
 	abstract class Instruction {
 
-		protected final int index;
+		protected final Long index;
 		
 		protected final OpCode opcode;
 		
 		protected List<Parameter> parameters;
 		
-		protected Integer result;
+		protected Long result;
 		
 		protected void process() {
 			result = calculate();
@@ -411,23 +443,23 @@ public class IntcodeComputer implements Runnable {
 
 		protected abstract void initialiseParameters();
 		
-		protected abstract Integer calculate();
+		protected abstract Long calculate();
 		
-		protected abstract Integer getResultPosition();
+		protected abstract Long getResultPosition();
 		
 		protected abstract void outputResult(); 
 		
-		protected Integer getNextInstructionPointer(int instructionPointer) {
+		protected Long getNextInstructionPointer(Long instructionPointer) {
 			return instructionPointer + opcode.numParameters + 1;
 		}
 		
-		protected Instruction(OpCode opcode, int index) {
+		protected Instruction(OpCode opcode, Long index) {
 			this.index = index;
 			this.opcode = opcode;
 		}
 		
 		protected List<ParameterMode> getParameterModes() {
-			Integer instructionInt = program.getOpcode(index); //opcodes.get(index);
+			Long instructionInt = program.getOpcode(index); //opcodes.get(index);
 			char[] instructionChars = instructionInt.toString().toCharArray();
 			List<ParameterMode> modes = new ArrayList<>();
 			int length = instructionChars.length;
@@ -444,7 +476,7 @@ public class IntcodeComputer implements Runnable {
 		}
 		
 		protected void setParameters(List<ParameterMode> parameterModes) {
-			int paramIndex = index;
+			long paramIndex = index;
 			parameters = new ArrayList<>();
 			for (ParameterMode mode : parameterModes) {
 				paramIndex++;
@@ -462,7 +494,7 @@ public class IntcodeComputer implements Runnable {
 
 	public class AddInstruction extends Instruction {
 
-		public AddInstruction(OpCode opcode, int index) {
+		public AddInstruction(OpCode opcode, Long index) {
 			super(opcode, index);
 		}
 
@@ -478,21 +510,21 @@ public class IntcodeComputer implements Runnable {
 		}
 		
 		@Override
-		protected Integer calculate() {
-			Integer noun = parameters.get(0).getValue();
-			Integer verb = parameters.get(1).getValue();
+		protected Long calculate() {
+			Long noun = parameters.get(0).getValue();
+			Long verb = parameters.get(1).getValue();
 			return noun + verb;
 		}
 
 		@Override
-		protected Integer getResultPosition() {
+		protected Long getResultPosition() {
 			return program.getOpcode(parameters.get(2).getAddress()); //opcodes.get(parameters.get(2).getAddress());
 		}
 
 		@Override
 		protected void outputResult() {
-			Integer resultPosition = getResultPosition();
-			//LOG.info("Writing value {} to position {}", result, resultPosition);
+			Long resultPosition = getResultPosition();
+			LOG.info("Writing value {} to position {}", result, resultPosition);
 			//opcodes.set(resultPosition, result);
 			program.setOpcode(resultPosition, result);
 		}
@@ -500,14 +532,14 @@ public class IntcodeComputer implements Runnable {
 
 	public class MultiplyInstruction extends Instruction {
 
-		public MultiplyInstruction(OpCode opcode, int index) {
+		public MultiplyInstruction(OpCode opcode, Long index) {
 			super(opcode, index);
 		}
 		
 		@Override
-		protected Integer calculate() {
-			Integer noun = parameters.get(0).getValue();
-			Integer verb = parameters.get(1).getValue();
+		protected Long calculate() {
+			Long noun = parameters.get(0).getValue();
+			Long verb = parameters.get(1).getValue();
 			return noun * verb;
 		}
 
@@ -523,7 +555,7 @@ public class IntcodeComputer implements Runnable {
 		}
 
 		@Override
-		protected Integer getResultPosition() {
+		protected Long getResultPosition() {
 			//return opcodes.get(parameters.get(2).getAddress());
 			return program.getOpcode(parameters.get(2).getAddress());
 		}
@@ -537,7 +569,7 @@ public class IntcodeComputer implements Runnable {
 	
 	public class InputInstruction extends Instruction {
 		
-		protected InputInstruction(OpCode opcode, int index) {
+		protected InputInstruction(OpCode opcode, Long index) {
 			super(opcode, index);
 		}
 
@@ -551,10 +583,10 @@ public class IntcodeComputer implements Runnable {
 		}
 
 		@Override
-		protected Integer calculate() {
+		protected Long calculate() {
 			LOG.info("{}: looking for input", name);
 			try {
-				Integer val = input.take();
+				Long val = input.take();
 				LOG.info("{} received value {}", name, val);
 				return val;
 			} catch (InterruptedException e) {
@@ -564,14 +596,14 @@ public class IntcodeComputer implements Runnable {
 		}
 
 		@Override
-		protected Integer getResultPosition() {
+		protected Long getResultPosition() {
 			//return opcodes.get(parameters.get(0).getAddress());
 			return program.getOpcode(parameters.get(0).getAddress());
 		}
 
 		@Override
 		protected void outputResult() {
-			Integer resultPosition = getResultPosition();
+			Long resultPosition = getResultPosition();
 			//LOG.info("Writing value {} to position {}", result, resultPosition);
 			//opcodes.set(resultPosition, result);
 			program.setOpcode(resultPosition, result);
@@ -580,7 +612,7 @@ public class IntcodeComputer implements Runnable {
 	
 	public class OutputInstruction extends Instruction {
 		
-		protected OutputInstruction(OpCode opcode, int index) {
+		protected OutputInstruction(OpCode opcode, Long index) {
 			super(opcode, index);
 		}
 
@@ -594,12 +626,12 @@ public class IntcodeComputer implements Runnable {
 		}
 
 		@Override
-		protected Integer calculate() {
+		protected Long calculate() {
 			return parameters.get(0).getValue();
 		}
 
 		@Override
-		protected Integer getResultPosition() {
+		protected Long getResultPosition() {
 			//return opcodes.get(parameters.get(0).getAddress());
 			return program.getOpcode(parameters.get(0).getAddress());
 		}
@@ -619,7 +651,7 @@ public class IntcodeComputer implements Runnable {
 	
 	public class JumpIfTrueInstruction extends Instruction {
 
-		protected JumpIfTrueInstruction(OpCode opcode, int index) {
+		protected JumpIfTrueInstruction(OpCode opcode, Long index) {
 			super(opcode, index);
 		}
 
@@ -640,30 +672,30 @@ public class IntcodeComputer implements Runnable {
 		}
 
 		@Override
-		protected Integer getNextInstructionPointer(int instructionPointer) {
+		protected Long getNextInstructionPointer(Long instructionPointer) {
 			Parameter param1 = parameters.get(0);
-			Integer param1Value = param1.getValue();
+			Long param1Value = param1.getValue();
 			Parameter param2 = parameters.get(1);
-			Integer param2Value = param2.getValue();
+			Long param2Value = param2.getValue();
 			if (param1Value > 0) {
 				//LOG.info("{} > 0: jumping to {}", param1Value, param2Value);
 				return param2Value;
 			}
-			Integer nextPtr = super.getNextInstructionPointer(instructionPointer);
+			Long nextPtr = super.getNextInstructionPointer(instructionPointer);
 			//LOG.info("{} <= 0: next instruction pointer is: {}", param1Value, nextPtr);
 			return nextPtr;
 		}
 
 		@Override
-		protected Integer calculate() {
+		protected Long calculate() {
 			// We do not use this method for this instruction
-			return 0;
+			return 0L;
 		}
 
 		@Override
-		protected Integer getResultPosition() {
+		protected Long getResultPosition() {
 			// We do not use this method for this instruction
-			return 0;
+			return 0L;
 		}
 
 		@Override
@@ -674,7 +706,7 @@ public class IntcodeComputer implements Runnable {
 	
 	public class JumpIfFalseInstruction extends Instruction {
 
-		protected JumpIfFalseInstruction(OpCode opcode, int index) {
+		protected JumpIfFalseInstruction(OpCode opcode, Long index) {
 			super(opcode, index);
 		}
 
@@ -695,30 +727,30 @@ public class IntcodeComputer implements Runnable {
 		}
 
 		@Override
-		protected Integer getNextInstructionPointer(int instructionPointer) {
+		protected Long getNextInstructionPointer(Long instructionPointer) {
 			Parameter param1 = parameters.get(0);
-			Integer param1Value = param1.getValue();
+			Long param1Value = param1.getValue();
 			Parameter param2 = parameters.get(1);
-			Integer param2Value = param2.getValue();
+			Long param2Value = param2.getValue();
 			if (param1Value.equals(0)) {
 				//LOG.info("{} = 0, jumping to instruction {}", param1Value, param2Value);
 				return param2Value;
 			}
-			Integer nextPtr = super.getNextInstructionPointer(instructionPointer);
+			Long nextPtr = super.getNextInstructionPointer(instructionPointer);
 			//LOG.info("{} != 0: next instruction is {}", param1Value, nextPtr);
 			return nextPtr;
 		}
 
 		@Override
-		protected Integer calculate() {
+		protected Long calculate() {
 			// We do not use this method for this instruction
-			return 0;
+			return 0L;
 		}
 
 		@Override
-		protected Integer getResultPosition() {
+		protected Long getResultPosition() {
 			// We do not use this method for this instruction
-			return 0;
+			return 0L;
 		}
 
 		@Override
@@ -729,7 +761,7 @@ public class IntcodeComputer implements Runnable {
 	
 	class LessThanInstruction extends Instruction {
 
-		protected LessThanInstruction(OpCode opcode, int index) {
+		protected LessThanInstruction(OpCode opcode, Long index) {
 			super(opcode, index);
 		}
 
@@ -745,20 +777,20 @@ public class IntcodeComputer implements Runnable {
 		}
 
 		@Override
-		protected Integer calculate() {
-			Integer value1 = parameters.get(0).getValue();
-			Integer value2 = parameters.get(1).getValue();
-			return value1 < value2 ? 1 : 0;
+		protected Long calculate() {
+			Long value1 = parameters.get(0).getValue();
+			Long value2 = parameters.get(1).getValue();
+			return value1 < value2 ? 1L : 0L;
 		}
 
 		@Override
-		protected Integer getResultPosition() {
+		protected Long getResultPosition() {
 			return parameters.get(2).getValueAtAddress();
 		}
 
 		@Override
 		protected void outputResult() {
-			Integer resultPosition = getResultPosition();
+			Long resultPosition = getResultPosition();
 			//LOG.info("Writing value {} to position {}", result, resultPosition);
 			//opcodes.set(resultPosition, result);
 			program.setOpcode(resultPosition, result);
@@ -767,7 +799,7 @@ public class IntcodeComputer implements Runnable {
 	
 	class EqualsInstruction extends Instruction {
 
-		protected EqualsInstruction(OpCode opcode, int index) {
+		protected EqualsInstruction(OpCode opcode, Long index) {
 			super(opcode, index);
 		}
 
@@ -783,21 +815,21 @@ public class IntcodeComputer implements Runnable {
 		}
 
 		@Override
-		protected Integer calculate() {
-			Integer value1 = parameters.get(0).getValue();
-			Integer value2 = parameters.get(1).getValue();
-			return value1.equals(value2) ? 1 : 0;
+		protected Long calculate() {
+			Long value1 = parameters.get(0).getValue();
+			Long value2 = parameters.get(1).getValue();
+			return value1.equals(value2) ? 1L : 0;
 		}
 
 		@Override
-		protected Integer getResultPosition() {
+		protected Long getResultPosition() {
 			//return opcodes.get(parameters.get(2).getAddress());
 			return program.getOpcode(parameters.get(2).getAddress());
 		}
 
 		@Override
 		protected void outputResult() {
-			Integer resultPosition = getResultPosition();
+			Long resultPosition = getResultPosition();
 			LOG.info("Writing value {} to position {}", result, resultPosition);
 			//opcodes.set(resultPosition, result);
 			program.setOpcode(resultPosition, result);
@@ -806,7 +838,7 @@ public class IntcodeComputer implements Runnable {
 	
 	public class UpdateRelativeBaseInstruction extends Instruction {
 
-		protected UpdateRelativeBaseInstruction(OpCode opcode, int index) {
+		protected UpdateRelativeBaseInstruction(OpCode opcode, Long index) {
 			super(opcode, index);
 		}
 
@@ -822,12 +854,15 @@ public class IntcodeComputer implements Runnable {
 		}
 
 		@Override
-		protected Integer calculate() {
-			return relativeBase + parameters.get(0).getValue();
+		protected Long calculate() {
+			Long paramValue =  parameters.get(0).getValue();
+			Long newRelativeBase = relativeBase + paramValue;
+			LOG.info("Change relativeBase from {} to {}", relativeBase, newRelativeBase);
+			return newRelativeBase;
 		}
 
 		@Override
-		protected Integer getResultPosition() {
+		protected Long getResultPosition() {
 			return null;
 		}
 
@@ -839,7 +874,7 @@ public class IntcodeComputer implements Runnable {
 	
 	public class TerminateInstruction extends Instruction {
 
-		protected TerminateInstruction(OpCode opcode, int index) {
+		protected TerminateInstruction(OpCode opcode, Long index) {
 			super(opcode, index);
 		}
 
@@ -849,13 +884,13 @@ public class IntcodeComputer implements Runnable {
 		}
 
 		@Override
-		protected Integer calculate() {
+		protected Long calculate() {
 			terminated = true;
 			return null;
 		}
 
 		@Override
-		protected Integer getResultPosition() {
+		protected Long getResultPosition() {
 			return null;
 		}
 

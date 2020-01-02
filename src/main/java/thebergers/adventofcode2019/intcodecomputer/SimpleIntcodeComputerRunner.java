@@ -14,12 +14,13 @@ public class SimpleIntcodeComputerRunner implements IntcodeComputerRunner {
 	public SimpleIntcodeComputerRunner(IntcodeComputerBuilder builder) {
 		this.name = builder.getName();
 		this.program = builder.getProgram();
-		initialise();
+		//initialise();
+		this.intcodeComputer = builder.build();
 	}
 	
 	@Override
 	public void initialise() {
-		intcodeComputer = new IntcodeComputer(1, name, program);
+		//intcodeComputer = builder.build(); //.new IntcodeComputer(1, name, program);
 	}
 
 	@Override

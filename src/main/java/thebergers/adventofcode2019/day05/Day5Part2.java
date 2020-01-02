@@ -15,7 +15,7 @@ public class Day5Part2 {
 		String program = Utils.getDataFromFile(fileName).get(0);
 		IntcodeComputer ic = new IntcodeComputer(program);
 		CompletableFuture<IntcodeComputerResult> future = CompletableFuture.supplyAsync(() -> {
-			ic.addInput(5);
+			ic.addInput(5L);
 			return ic.processOpcodes();
 		});
 		IntcodeComputerResult result = future.get();

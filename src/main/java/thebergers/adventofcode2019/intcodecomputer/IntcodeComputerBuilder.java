@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class IntcodeComputerBuilder {
 
@@ -13,7 +14,7 @@ public class IntcodeComputerBuilder {
 	
 	private String program;
 	
-	private List<Integer> initialInput;
+	private List<Long> initialInput;
 	
 	private String connectsTo;
 	
@@ -44,7 +45,7 @@ public class IntcodeComputerBuilder {
 		return program;
 	}
 	
-	public IntcodeComputerBuilder addInput(Integer input) {
+	public IntcodeComputerBuilder addInput(Long input) {
 		if (CollectionUtils.isEmpty(this.initialInput)) {
 			this.initialInput = new LinkedList<>();
 		}
@@ -61,6 +62,12 @@ public class IntcodeComputerBuilder {
 	}
 	
 	public IntcodeComputer build() {
+		if (StringUtils.isEmpty(name)) {
+			this.name = "IntcodeComputer";
+		}
+		if (null == sequenceNumber) {
+			sequenceNumber = 1;
+		}
 		IntcodeComputer computer = new IntcodeComputer(sequenceNumber, name, program);
 		if (null != initialInput) {
 			initialInput.stream()

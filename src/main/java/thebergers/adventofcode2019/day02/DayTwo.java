@@ -16,8 +16,8 @@ public class DayTwo {
 		String fileName = "./src/main/resources/daytwo/input.txt";
 		List<String> input = Utils.getDataFromFile(fileName);
 		IntcodeComputer intcodeComputer = new IntcodeComputer(input.get(0));
-		intcodeComputer.setCode(1, 12);
-		intcodeComputer.setCode(2, 2);
+		intcodeComputer.setCode(1L, 12L);
+		intcodeComputer.setCode(2L, 2L);
 		CompletableFuture<IntcodeComputerResult> future = CompletableFuture.supplyAsync(() -> {
 			return intcodeComputer.processOpcodes();
 		});

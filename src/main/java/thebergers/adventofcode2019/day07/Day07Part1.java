@@ -14,7 +14,7 @@ public class Day07Part1 {
 				.setProgram(program)
 				.setPhaseSettingRange(0, 4)
 				.build();
-		Integer maxThrust = tsc.calculateMaxThrust();
+		Long maxThrust = tsc.calculateMaxThrust();
 		System.out.format("Max thrust signal = %d%n", maxThrust);
 	}
 }

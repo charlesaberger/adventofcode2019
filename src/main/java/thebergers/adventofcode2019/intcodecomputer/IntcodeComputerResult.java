@@ -8,11 +8,11 @@ public class IntcodeComputerResult {
 	
 	private final String result;
 	
-	private final Integer output;
+	private final Long output;
 	
 	private boolean terminated;
 	
-	public IntcodeComputerResult(Integer sequenceNumber, String name, String result, Integer output, boolean terminated) {
+	public IntcodeComputerResult(Integer sequenceNumber, String name, String result, Long output, boolean terminated) {
 		this.sequenceNumber = sequenceNumber;
 		this.name =name; 
 		this.result = result;
@@ -28,15 +28,15 @@ public class IntcodeComputerResult {
 		return name;
 	}
 	
-	public Integer getOutput() {
+	public Long getOutput() {
 		return output;
 	}
 	
 	public String getResult() {
 		return result;
 	}
-	public Integer getPosition(int i) {
-		return Integer.parseInt(getOpcodes()[i]);
+	public Long getPosition(int i) {
+		return Long.parseLong(getOpcodes()[i]);
 	}
 
 	public boolean isTerminated() {
@@ -58,7 +58,7 @@ public class IntcodeComputerResult {
 	}
 	
 	public static IntcodeComputerResult errorInstance() {
-		return new IntcodeComputerResult(0, "", "", -1, true);
+		return new IntcodeComputerResult(0, "", "", -1L, true);
 	}
 	
 	public String toString() {

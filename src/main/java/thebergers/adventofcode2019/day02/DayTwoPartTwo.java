@@ -37,15 +37,15 @@ public class DayTwoPartTwo {
 		IntcodeComputer intcodeComputer = new IntcodeComputer(initialise());
 		for (Integer noun = MIN_VALUE; noun <= MAX_VALUE; noun++) {
 			for (Integer verb = MIN_VALUE; verb <= MAX_VALUE; verb++) {
-				intcodeComputer.setCode(1, noun);
-				intcodeComputer.setCode(2, verb);
+				intcodeComputer.setCode(1L, new Long(noun));
+				intcodeComputer.setCode(2L, new Long(verb));
 				CompletableFuture<IntcodeComputerResult> future = CompletableFuture.supplyAsync(() -> {
 					return intcodeComputer.processOpcodes();
 				});
 				IntcodeComputerResult result = future.get();
-				Integer nounValue = result.getPosition(noun);
-				Integer verbValue = result.getPosition(verb);
-				Integer resultValue = result.getPosition(0);
+				Long nounValue = result.getPosition(noun);
+				Long verbValue = result.getPosition(verb);
+				Long resultValue = result.getPosition(0);
 				LOG.info("noun: {}, verb: {}, nounValue: {}, verbValue: {}, resultValue: {}",
 						noun, verb, nounValue, verbValue, resultValue);
 				if (resultValue.equals(expectedResult)) {
