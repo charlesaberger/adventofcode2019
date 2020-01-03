@@ -35,9 +35,9 @@ public class ThrusterSignalCalculator {
 
 	private IntcodeComputerRunner buildAmplifiers(String phaseSetting) {
 		IntcodeComputerRunnerBuilder builder = IntcodeComputerRunnerBuilder.newInstance();
-		List<Integer> phases = Arrays.asList(phaseSetting.split(","))
+		List<Long> phases = Arrays.asList(phaseSetting.split(","))
 			.stream()
-			.map(Integer::parseInt)
+			.map(Long::parseLong)
 			.collect(Collectors.toList());
 		phases
 			.stream()
@@ -49,7 +49,7 @@ public class ThrusterSignalCalculator {
 				.addInput(phase)
 				.setConnectsTo(getConnectsTo(phases, phase, useFeedback));
 				if (phases.indexOf(phase) == 0) {
-					icBuilder.addInput(0);
+					icBuilder.addInput(0L);
 				}
 				return icBuilder;
 			})
@@ -57,15 +57,15 @@ public class ThrusterSignalCalculator {
 		return builder.build();
 	}
 
-	private Integer getSequenceNumber(List<Integer> phases, Integer phase) {
+	private Integer getSequenceNumber(List<Long> phases, Long phase) {
 		return phases.indexOf(phase) + 1;
 	}
 
-	private String getAmpName(List<Integer> phases, Integer phase) {
+	private String getAmpName(List<Long> phases, Long phase) {
 		return String.format("amp%s", (Character.toString((char)(65 + phases.indexOf(phase)))));
 	}
 	
-	private String getConnectsTo(List<Integer> phases, Integer phase, boolean useFeedback) {
+	private String getConnectsTo(List<Long> phases, Long phase, boolean useFeedback) {
 		int connectsToPhaseIndex = phases.indexOf(phase) + 1;
 		if (connectsToPhaseIndex < phases.size()) {
 			return getAmpName(phases, phases.get(connectsToPhaseIndex));
@@ -84,7 +84,7 @@ public class ThrusterSignalCalculator {
 		return program;
 	}
 
-	public Integer calculateThrust() throws InterruptedException, ExecutionException {
+	public Long calculateThrust() throws InterruptedException, ExecutionException {
 		runner.start();
 		CompletableFuture<IntcodeComputerResult> future = CompletableFuture.supplyAsync(() -> {
 			try {

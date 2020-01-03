@@ -15,8 +15,8 @@ public class ThrusterSignalController {
 	
 	private Map<String, ThrusterSignalCalculator> calculators;
 	
-	public Integer calculateMaxThrust() {
-		Optional<Integer> maxThrust = calculators
+	public Long calculateMaxThrust() {
+		Optional<Long> maxThrust = calculators
 				.entrySet()
 				.stream()
 				.map(entry -> {
@@ -27,7 +27,7 @@ public class ThrusterSignalController {
 					} catch (ExecutionException e) {
 						LOG.warn("{}", e);
 					}
-					return -1;
+					return -1L;
 				})
 				.sorted(Comparator.reverseOrder())
 				.findFirst();

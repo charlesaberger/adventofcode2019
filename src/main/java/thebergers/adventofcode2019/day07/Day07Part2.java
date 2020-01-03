@@ -15,7 +15,7 @@ public class Day07Part2 {
 				.setProgram(program)
 				.setUseFeedback(true)
 				.build();
-		Integer maxThrust = tsc.calculateMaxThrust();
+		Long maxThrust = tsc.calculateMaxThrust();
 		System.out.format("Max thrust signal = %d%n", maxThrust);
 	}
 }

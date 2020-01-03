@@ -1,5 +1,9 @@
 package thebergers.adventofcode2019.intcodecomputer;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class IntcodeComputerResult {
 
 	private final Integer sequenceNumber;
@@ -8,11 +12,11 @@ public class IntcodeComputerResult {
 	
 	private final String result;
 	
-	private final Integer output;
+	private final List<Long> output;
 	
 	private boolean terminated;
 	
-	public IntcodeComputerResult(Integer sequenceNumber, String name, String result, Integer output, boolean terminated) {
+	public IntcodeComputerResult(Integer sequenceNumber, String name, String result, List<Long> output, boolean terminated) {
 		this.sequenceNumber = sequenceNumber;
 		this.name =name; 
 		this.result = result;
@@ -28,15 +32,19 @@ public class IntcodeComputerResult {
 		return name;
 	}
 	
-	public Integer getOutput() {
-		return output;
+	public Long getOutput() {
+		return output.get(0);
+	}
+	
+	public String getAllOutput() {
+		return output.stream().map(val -> Long.toString(val)).collect(Collectors.joining(","));
 	}
 	
 	public String getResult() {
 		return result;
 	}
-	public Integer getPosition(int i) {
-		return Integer.parseInt(getOpcodes()[i]);
+	public Long getPosition(int i) {
+		return Long.parseLong(getOpcodes()[i]);
 	}
 
 	public boolean isTerminated() {
@@ -58,7 +66,7 @@ public class IntcodeComputerResult {
 	}
 	
 	public static IntcodeComputerResult errorInstance() {
-		return new IntcodeComputerResult(0, "", "", -1, true);
+		return new IntcodeComputerResult(0, "", "", Collections.emptyList(), true);
 	}
 	
 	public String toString() {

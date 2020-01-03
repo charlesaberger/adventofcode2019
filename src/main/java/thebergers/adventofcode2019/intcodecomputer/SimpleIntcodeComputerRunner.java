@@ -7,19 +7,13 @@ public class SimpleIntcodeComputerRunner implements IntcodeComputerRunner {
 
 	private IntcodeComputer intcodeComputer;
 	
-	private final String name;
-	
-	private final String program;
-	
 	public SimpleIntcodeComputerRunner(IntcodeComputerBuilder builder) {
-		this.name = builder.getName();
-		this.program = builder.getProgram();
-		initialise();
+		this.intcodeComputer = builder.build();
 	}
 	
 	@Override
 	public void initialise() {
-		intcodeComputer = new IntcodeComputer(1, name, program);
+		// do nothing
 	}
 
 	@Override
