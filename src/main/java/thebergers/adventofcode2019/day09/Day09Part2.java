@@ -6,7 +6,7 @@ import thebergers.adventofcode2019.intcodecomputer.IntcodeComputerRunner;
 import thebergers.adventofcode2019.intcodecomputer.IntcodeComputerRunnerBuilder;
 import thebergers.adventofcode2019.utils.Utils;
 
-public class Day09Part1 {
+public class Day09Part2 {
 
 	public static void main(String[] args) throws Exception {
 		String fileName = "./src/main/resources/day09/input.txt";
@@ -16,7 +16,7 @@ public class Day09Part1 {
 						.setName("BOOST")
 						.setProgram(program)
 						.setSequenceNumber(1)
-						.addInput(1L))
+						.addInput(2L))
 				.build();
 		IntcodeComputerResult result = runner.doProcessing();
 		System.out.format("BOOST keycode = %s%n", result.getAllOutput());

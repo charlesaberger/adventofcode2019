@@ -212,8 +212,8 @@ public class TestIntcodeComputer {
 	}
 	
 	@Test
-	public void testQueuedInput() {
-		CompletableFuture.supplyAsync(() -> {
+	public void testQueuedInput() throws Exception {
+		/*CompletableFuture.supplyAsync(() -> {
 			String program = "3,11,3,12,1,11,12,13,4,13,99,-1,-1,-1";
 			IntcodeComputer ic = new IntcodeComputer(program);
 			ic.addInput(1L);
@@ -222,7 +222,17 @@ public class TestIntcodeComputer {
 		}).thenAccept(result -> {
 			assertThat(result.getOutput()).as("1 + 2 = 3").isEqualTo(3);
 			assertThat(result.isTerminated()).as("Is terminated?").isTrue();
-		});
+		});*/
+		String program = "3,11,3,12,1,11,12,13,4,13,99,-1,-1,-1";
+		IntcodeComputerRunner runner = IntcodeComputerRunnerBuilder.newInstance()
+				.addBuilder(IntcodeComputerBuilder.newInstance()
+						.setProgram(program)
+						.addInput(1L)
+						.addInput(2L))
+				.build();
+		IntcodeComputerResult result = runner.doProcessing();
+		assertThat(result.getOutput()).as("1 + 2 = 3").isEqualTo(3);
+		assertThat(result.isTerminated()).as("Is terminated?").isTrue();
 	}
 	
 	@DisplayName("Test save and exit")
@@ -267,7 +277,7 @@ public class TestIntcodeComputer {
 						.setProgram(program))
 				.build();
 		IntcodeComputerResult result = runner.doProcessing();
-		assertThat(result.getResult()).as("Check result").contains(expected);
+		assertThat(result.getAllOutput()).as("Check result").isEqualTo(expected);
 	}
 	
 	@DisplayName("Test Relative Parameters & memory extension (2)")
@@ -297,13 +307,11 @@ public class TestIntcodeComputer {
 	@DisplayName("Test Relative Parameter input")
 	@ParameterizedTest(name = "{index}: program: {0}, input: {1}, expected: {2}")
 	@CsvSource({
-		/*"'203,3,104,0,99',50,50",
-		"'109,5,203,0,104,0,99',27,27",*/
+		"'203,3,104,0,99',50,50",
+		"'109,5,203,0,104,0,99',27,27",
 		"'209,9,21101,5,6,0,4,8,-1,8',0,11"
 	})
 	public void testRelativeParameterInput(String program, Long input, Long expected) throws Exception {
-		//String program = "203,3,104,0,99";
-		//Long input = 50L;
 		IntcodeComputerRunner runner = IntcodeComputerRunnerBuilder.newInstance()
 				.addBuilder(IntcodeComputerBuilder.newInstance()
 						.setProgram(program)
@@ -317,7 +325,7 @@ public class TestIntcodeComputer {
 	@DisplayName("Tests for Output Parameters from Reddit")
 	@ParameterizedTest(name = "{index}: program: {0}, input: {1}, expected: {2}")
 	@CsvSource({
-		/*"'109,-1,4,1,99',0,-1"
+		"'109,-1,4,1,99',0,-1"
 		,"'109,-1,104,1,99',0,1"
 		,
 		"'109,-1,204,1,99',0,109"
@@ -325,7 +333,7 @@ public class TestIntcodeComputer {
 		,"'109,1,109,9,204,-6,99',0,204"
 		,"'109,1,209,-1,204,-106,99',0,204"
 		,"'109,1,3,3,204,2,99',2020,2020"
-		,*/"'109,1,203,2,204,2,99',2020,2020"
+		,"'109,1,203,2,204,2,99',2020,2020"
 	})
 	public void testOutputParametersReddit(String program, Long input, Long expected) throws Exception {
 		IntcodeComputerRunner runner = IntcodeComputerRunnerBuilder.newInstance()

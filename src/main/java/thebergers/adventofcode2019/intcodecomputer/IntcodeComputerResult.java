@@ -1,5 +1,9 @@
 package thebergers.adventofcode2019.intcodecomputer;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class IntcodeComputerResult {
 
 	private final Integer sequenceNumber;
@@ -8,11 +12,11 @@ public class IntcodeComputerResult {
 	
 	private final String result;
 	
-	private final Long output;
+	private final List<Long> output;
 	
 	private boolean terminated;
 	
-	public IntcodeComputerResult(Integer sequenceNumber, String name, String result, Long output, boolean terminated) {
+	public IntcodeComputerResult(Integer sequenceNumber, String name, String result, List<Long> output, boolean terminated) {
 		this.sequenceNumber = sequenceNumber;
 		this.name =name; 
 		this.result = result;
@@ -29,7 +33,11 @@ public class IntcodeComputerResult {
 	}
 	
 	public Long getOutput() {
-		return output;
+		return output.get(0);
+	}
+	
+	public String getAllOutput() {
+		return output.stream().map(val -> Long.toString(val)).collect(Collectors.joining(","));
 	}
 	
 	public String getResult() {
@@ -58,7 +66,7 @@ public class IntcodeComputerResult {
 	}
 	
 	public static IntcodeComputerResult errorInstance() {
-		return new IntcodeComputerResult(0, "", "", -1L, true);
+		return new IntcodeComputerResult(0, "", "", Collections.emptyList(), true);
 	}
 	
 	public String toString() {
