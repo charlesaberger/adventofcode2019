@@ -40,6 +40,16 @@ public class Asteroid {
 		return visibleAsteroids;
 	}
 
+	public Integer getCoordinates() {
+		return (x * 100) + y;
+	}
+
+	public Double distanceFrom(Asteroid asteroid) {
+		Integer xDiff = asteroid.getX() - this.getX();
+		Integer yDiff = asteroid.getY() - this.getY();
+		return Math.sqrt((xDiff * xDiff) + (yDiff * yDiff));
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

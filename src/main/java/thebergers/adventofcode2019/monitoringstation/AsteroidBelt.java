@@ -2,10 +2,13 @@ package thebergers.adventofcode2019.monitoringstation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,16 +51,21 @@ public class AsteroidBelt {
 	
 	private Long countVisibleAsteroids(Asteroid asteroid) {
 		LOG.info("{}", asteroid);
-		Map<Double, List<Asteroid>> angles = new HashMap<>();
+		Map<Double, List<Asteroid>> angles = plotAsteroids(asteroid);
 		
+		LOG.info("{}", logAngles(angles));
+		return angles.entrySet().parallelStream().count();
+	}
+	
+	private Map<Double, List<Asteroid>> plotAsteroids(Asteroid asteroid) {
+		Map<Double, List<Asteroid>> angles = new TreeMap<>();
 		asteroids.stream()
 		.filter(a1 -> !a1.equals(asteroid))
 		.forEach(a1 -> {
 			Double angle = calculateAngle(asteroid, a1);
 			storeAngle(angles, a1, angle);
 		});
-		LOG.info("{}", logAngles(angles));
-		return angles.entrySet().parallelStream().count();
+		return angles;
 	}
 
 	private Map<Double, List<Asteroid>> storeAngle(Map<Double, List<Asteroid>> angles, Asteroid a1, Double angle) {
@@ -75,11 +83,11 @@ public class AsteroidBelt {
 	private Double calculateAngle(Asteroid asteroid, Asteroid a1) {
 		Double xDiff = a1.getX().doubleValue() - asteroid.getX().doubleValue();
 		Double yDiff = a1.getY().doubleValue() - asteroid.getY().doubleValue();
-		Double angle = Math.toDegrees(Math.atan2(yDiff, xDiff));
+		Double angle = Math.toDegrees(Math.atan2(yDiff, xDiff)) + 90.0;
 		if (angle < 0) {
 			angle += 360;
 		}
-		return angle;
+		return angle; //(angle + 360.0) % 360.0;
 	}
 	
 	private String logAngles(Map<Double, List<Asteroid>> angles) {
@@ -90,5 +98,36 @@ public class AsteroidBelt {
 			.forEach(entry -> builder.append(String.format("Angle: %f, Asteroid Count: %d, ",
 					entry.getKey(), entry.getValue().size())));
 		return builder.toString();
+	}
+
+	public List<Asteroid> vaporizeAsteroids(Asteroid monitoringStation) {
+		List<Asteroid> vaporized = new ArrayList<>();
+		Map<Double, List<Asteroid>> angles = plotAsteroids(monitoringStation);
+		while (true) {
+			TreeSet<Double> angleSet = new TreeSet<>(angles.keySet());
+			Iterator<Double> angleSetIter = angleSet.iterator();
+			while (angleSetIter.hasNext()) {
+				Double angle = angleSetIter.next();
+				List<Asteroid> asteroidList = angles.get(angle);
+				Optional<Asteroid> toVaporizeOpt = asteroidList
+						.stream()
+						.sorted((a1, a2) -> a1.distanceFrom(monitoringStation).compareTo(
+								a2.distanceFrom(monitoringStation)))
+						.findFirst();
+				if (toVaporizeOpt.isPresent()) {
+					Asteroid toVaporize = toVaporizeOpt.get();
+					vaporized.add(toVaporize);
+					asteroidList.remove(toVaporize);
+					angles.put(angle, asteroidList);
+				}
+				if (asteroidList.isEmpty()) {
+					angles.remove(angle);
+				}
+			}
+			if (angles.isEmpty()) {
+				break;
+			}
+		}
+		return vaporized;
 	}
 }

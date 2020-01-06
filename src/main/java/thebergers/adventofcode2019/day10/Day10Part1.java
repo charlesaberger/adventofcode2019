@@ -15,6 +15,9 @@ public class Day10Part1 {
 		AsteroidBelt asteroidBelt = AsteroidBeltBuilder.newInstance().setMapData(mapData).build();
 		Asteroid asteroid = asteroidBelt.findMonitoringStationLocation();
 		System.out.format("Asteroid: %s, visibleAsteroids=%d%n", asteroid, asteroid.getVisibleAsteroids());
+		List<Asteroid> vaporized = asteroidBelt.vaporizeAsteroids(asteroid);
+		Asteroid asteroid200 = vaporized.get(200 - 1);
+		System.out.format("200th Asteroid co-ords: %s%n", asteroid200.getCoordinates());
 	}
 
 }
