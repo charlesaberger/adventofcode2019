@@ -27,7 +27,6 @@ public class AsteroidBelt {
 	public Asteroid findMonitoringStationLocation() {
 		Map<Asteroid, Long> visibleAsteroids = new HashMap<>();
 		asteroids.stream()
-			//.forEach(asteroid -> visibleAsteroids.put(asteroid, countVisibleAsteroids(asteroid)));
 			.forEach(asteroid -> {
 				Long visibleAsteroidCount = countVisibleAsteroids(asteroid);
 				asteroid.setVisibleAsteroids(visibleAsteroidCount);
@@ -76,7 +75,11 @@ public class AsteroidBelt {
 	private Double calculateAngle(Asteroid asteroid, Asteroid a1) {
 		Double xDiff = a1.getX().doubleValue() - asteroid.getX().doubleValue();
 		Double yDiff = a1.getY().doubleValue() - asteroid.getY().doubleValue();
-		return yDiff / xDiff;
+		Double angle = Math.toDegrees(Math.atan2(yDiff, xDiff));
+		if (angle < 0) {
+			angle += 360;
+		}
+		return angle;
 	}
 	
 	private String logAngles(Map<Double, List<Asteroid>> angles) {
@@ -84,7 +87,7 @@ public class AsteroidBelt {
 		builder.append(String.format("Map.size(): %d: ", angles.size()));
 		angles.entrySet()
 			.stream()
-			.forEach(entry -> builder.append(String.format("Angle: %f, Asteroid Count: %d",
+			.forEach(entry -> builder.append(String.format("Angle: %f, Asteroid Count: %d, ",
 					entry.getKey(), entry.getValue().size())));
 		return builder.toString();
 	}
