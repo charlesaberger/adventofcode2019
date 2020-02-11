@@ -22,15 +22,20 @@ public class IntcodeComputerRunnerBuilder {
 	}
 	
 	public IntcodeComputerRunner build() {
+		return build(false);
+	}
+
+	public IntcodeComputerRunner build(boolean observeChanges) {
 		if (builders.isEmpty()) {
 			throw new IllegalArgumentException("No IntcodeComputers specified!");
 		}
 		IntcodeComputerRunner runner = null;
-		if (builders.size() == 1) {
-			runner = new SimpleIntcodeComputerRunner(builders.get(0));
-		} else {
-			runner = new MultiThreadedIntcodeComputerRunner(builders);
+		if (observeChanges) {
+			return new MultiThreadedIntcodeComputerRunner(builders);
 		}
-		return runner;
+		if (builders.size() == 1) {
+			return new SimpleIntcodeComputerRunner(builders.get(0));
+		}
+		return new MultiThreadedIntcodeComputerRunner(builders);
 	}
 }

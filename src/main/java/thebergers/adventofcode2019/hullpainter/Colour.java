@@ -2,19 +2,19 @@ package thebergers.adventofcode2019.hullpainter;
 
 public enum Colour {
 
-	BLACK(0, "Black"),
-	WHITE(1, "White");
+	BLACK(0L, "Black"),
+	WHITE(1L, "White");
 	
-	private final Integer code;
+	private final Long code;
 	
 	private final String description;
 	
-	private Colour(Integer code, String description) {
+	Colour(Long code, String description) {
 		this.code = code;
 		this.description = description;
 	}
 	
-	public Integer getCode() {
+	public Long getCode() {
 		return code;
 	}
 	
@@ -22,14 +22,13 @@ public enum Colour {
 		return description;
 	}
 	
-	public static Colour getInstance(Integer code) {
-		switch (code) {
-		case 0:
+	public static Colour getInstance(Long code) {
+		if (code.equals(0L)) {
 			return BLACK;
-		case 1:
-			return WHITE;
-		default:
-			return null;
 		}
+		if (code.equals(1L)) {
+			return WHITE;
+		}
+		return null;
 	}
 }

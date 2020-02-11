@@ -3,10 +3,11 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern-->
-            <pattern> %-5level - %msg%n</pattern>
+            <pattern>[%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    <logger name="thebergers.adventofcode2019" level="info" /> 
+    <logger name="thebergers.adventofcode2019" level="info" />
+    <logger name="thebergers.adventofcode2019.intcodecomputer.IntcodeComputer" level="info" />
     <root level="info">
         <appender-ref ref="STDOUT" />
     </root>

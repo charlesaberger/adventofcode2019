@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutionException;
 
 public class SimpleIntcodeComputerRunner implements IntcodeComputerRunner {
 
-	private IntcodeComputer intcodeComputer;
+	private IntcodeComputerInterface intcodeComputer;
 	
 	public SimpleIntcodeComputerRunner(IntcodeComputerBuilder builder) {
 		this.intcodeComputer = builder.build();

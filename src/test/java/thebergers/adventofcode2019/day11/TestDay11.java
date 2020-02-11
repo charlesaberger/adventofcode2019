@@ -11,9 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import thebergers.adventofcode2019.hullpainter.PaintingRobot;
-import thebergers.adventofcode2019.intcodecomputer.FakeIntcodeComputerRunner;
-import thebergers.adventofcode2019.intcodecomputer.IntcodeComputerResult;
-import thebergers.adventofcode2019.intcodecomputer.IntcodeComputerRunner;
+import thebergers.adventofcode2019.intcodecomputer.*;
 
 public class TestDay11 {
 
@@ -24,20 +22,30 @@ public class TestDay11 {
 		Integer sn = 1;
 		String nm = "Fake IntcodeComputer";
 		List<IntcodeComputerResult> outputs = Stream.of(
-				new IntcodeComputerResult(sn, nm, "1,0", Arrays.asList(new Long[] { 1L, 0L }), false),
-				new IntcodeComputerResult(sn, nm, "0,0", Arrays.asList(new Long[] { 0L, 0L }), false),
-				new IntcodeComputerResult(sn, nm, "1,0", Arrays.asList(new Long[] { 1L, 0L }), false),
-				new IntcodeComputerResult(sn, nm, "1,0", Arrays.asList(new Long[] { 1L, 0L }), false),
-				new IntcodeComputerResult(sn, nm, "0,1", Arrays.asList(new Long[] { 0L, 1L }), false),
-				new IntcodeComputerResult(sn, nm, "1,0", Arrays.asList(new Long[] { 1L, 0L }), false),
-				new IntcodeComputerResult(sn, nm, "1,0", Arrays.asList(new Long[] { 1L, 0L }), true))
-				.collect(Collectors.toList());
+			new IntcodeComputerResult(sn, nm, "1", false),
+			new IntcodeComputerResult(sn, nm, "1,0", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,0", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,0,1", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,0,1,0", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,0,1,0,1", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,0,1,0,1,0", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,0,1,0,1,0,0", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,0,1,0,1,0,0,1", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,0,1,0,1,0,0,1,1", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,0,1,0,1,0,0,1,1,0", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,0,1,0,1,0,0,1,1,0,1", false),
+			new IntcodeComputerResult(sn, nm, "1,0,0,0,1,0,1,0,0,1,1,0,1,0", true))
+			.collect(Collectors.toList());
 
-		Integer expectedPaintedPanels = 6;
-		IntcodeComputerRunner runner = new FakeIntcodeComputerRunner(outputs);
-		PaintingRobot paintingRobot = new PaintingRobot(runner);
+		Long expectedPaintedPanels = 6L;
+		FakeIntcodeComputerBuilder builder = FakeIntcodeComputerBuilder.newInstance();
+		builder = builder.setTestResults(outputs);
+		IntcodeComputerInterface computer = builder.build();
+		PaintingRobot paintingRobot = new PaintingRobot(computer);
+		paintingRobot.start();
 		IntcodeComputerResult result = paintingRobot.doProcessing();
-		Integer paintedPanels = paintingRobot.getPaintedPanels();
+		long paintedPanels = paintingRobot.getPaintedPanels();
 		assertThat(paintedPanels).as("Check painted panels").isEqualTo(expectedPaintedPanels);
 	}
 }
