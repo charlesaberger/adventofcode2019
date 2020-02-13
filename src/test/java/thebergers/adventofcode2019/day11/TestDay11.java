@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import thebergers.adventofcode2019.hullpainter.Hull;
 import thebergers.adventofcode2019.hullpainter.PaintingRobot;
 import thebergers.adventofcode2019.intcodecomputer.*;
 
@@ -18,10 +19,36 @@ public class TestDay11 {
 	@DisplayName("Test robot navigation")
 	@Test
 	public void testRobotNavigation() throws Exception {
-		List<Integer> input = Arrays.asList(new Integer[] { 0, 0, 0, 0, 1, 0, 0 });
+		Long expectedPaintedPanels = 6L;
+		PaintingRobot paintingRobot = getRobot();
+		paintingRobot.start();
+		IntcodeComputerResult result = paintingRobot.doProcessing();
+		long paintedPanels = paintingRobot.getPaintedPanels();
+		assertThat(paintedPanels).as("Check painted panels").isEqualTo(expectedPaintedPanels);
+	}
+
+	@DisplayName("Test view hull")
+	@Test
+	public void viewHull() throws Exception {
+		List<String> expected = Stream.of(
+			"..#",
+			"..#",
+			"##."
+		)
+		.collect(Collectors.toList());
+		PaintingRobot paintingRobot = getRobot();
+		paintingRobot.start();
+		IntcodeComputerResult result = paintingRobot.doProcessing();
+		Hull hull = paintingRobot.getHull();
+		List<String> actual = hull.visualise();
+		actual.stream().forEach(System.out::println);
+		assertThat(actual).as("Compare visualisations").isEqualTo(expected);
+	}
+
+	private List<IntcodeComputerResult> getOutputs() {
 		Integer sn = 1;
 		String nm = "Fake IntcodeComputer";
-		List<IntcodeComputerResult> outputs = Stream.of(
+		return 	Stream.of(
 			new IntcodeComputerResult(sn, nm, "1", false),
 			new IntcodeComputerResult(sn, nm, "1,0", false),
 			new IntcodeComputerResult(sn, nm, "1,0,0,", false),
@@ -37,15 +64,12 @@ public class TestDay11 {
 			new IntcodeComputerResult(sn, nm, "1,0,0,0,1,0,1,0,0,1,1,0,1", false),
 			new IntcodeComputerResult(sn, nm, "1,0,0,0,1,0,1,0,0,1,1,0,1,0", true))
 			.collect(Collectors.toList());
+	}
 
-		Long expectedPaintedPanels = 6L;
+	private PaintingRobot getRobot() {
 		FakeIntcodeComputerBuilder builder = FakeIntcodeComputerBuilder.newInstance();
-		builder = builder.setTestResults(outputs);
+		builder = builder.setTestResults(getOutputs());
 		IntcodeComputerInterface computer = builder.build();
-		PaintingRobot paintingRobot = new PaintingRobot(computer);
-		paintingRobot.start();
-		IntcodeComputerResult result = paintingRobot.doProcessing();
-		long paintedPanels = paintingRobot.getPaintedPanels();
-		assertThat(paintedPanels).as("Check painted panels").isEqualTo(expectedPaintedPanels);
+		return new PaintingRobot(computer);
 	}
 }

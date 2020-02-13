@@ -75,4 +75,9 @@ public class Panel {
 	public String toString() {
 		return "Panel [x=" + x + ", y=" + y + ", colour=" + colour + ", painted=" + painted + "]";
 	}
+
+	public String visualise() {
+		return colour.equals(Colour.BLACK) ? "." : "#";
+	}
+
 }

@@ -18,6 +18,8 @@ public class PaintingRobot implements IntcodeComputerRunner, PropertyChangeListe
 	private final Hull hull;
 
 	private final IntcodeComputerInterface computer;
+
+	private final Colour startingColour;
 	
 	private BlockingQueue<Long> results;
 
@@ -35,13 +37,22 @@ public class PaintingRobot implements IntcodeComputerRunner, PropertyChangeListe
 		this.hull = new Hull();
 		this.computer = computer;
 		this.terminate = false;
+		this.startingColour = Colour.BLACK;
+		initialise();
+	}
+
+	public PaintingRobot(IntcodeComputerInterface computer, Colour startingColour) {
+		this.hull = new Hull();
+		this.computer = computer;
+		this.terminate = false;
+		this.startingColour = startingColour;
 		initialise();
 	}
 
 	@Override
 	public void initialise() {
 		results = new LinkedBlockingQueue<>();
-		currentPanel = hull.addPanel(0, 0);
+		currentPanel = hull.addPanel(0, 0, startingColour);
 		facing = FacingDirection.UP;
 		computer.addPropertyChangeListener(this);
 		allResults = new ArrayList<>();
@@ -165,6 +176,10 @@ public class PaintingRobot implements IntcodeComputerRunner, PropertyChangeListe
 				break;
 		}
 		return hull.goToPanel(newX, newY);
+	}
+
+	public Hull getHull() {
+		return hull;
 	}
 
 	enum InstructionType {
