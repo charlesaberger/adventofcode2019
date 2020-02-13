@@ -21,7 +21,7 @@ public class MultiThreadedIntcodeComputerRunner implements IntcodeComputerRunner
 
 	private final List<IntcodeComputerBuilder> builders;
 	
-	private Map<String, IntcodeComputer> computers = new HashMap<>();
+	private Map<String, IntcodeComputerInterface> computers = new HashMap<>();
 	
 	private Map<String, String> connections = new HashMap<>();
 	
@@ -70,7 +70,7 @@ public class MultiThreadedIntcodeComputerRunner implements IntcodeComputerRunner
 			}
 			String computerName = result.getName();
 			String nextComputer = connections.get(computerName);
-			IntcodeComputer computer = computers.get(nextComputer);
+			IntcodeComputerInterface computer = computers.get(nextComputer);
 			if (null != computer) {
 				computer.addInput(result.getOutput());
 			}

@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.core.Appender;
 
-public class IntcodeComputer implements Runnable {
+public class IntcodeComputer implements IntcodeComputerInterface {
 
 	private static final Logger LOG = LoggerFactory.getLogger(IntcodeComputer.class);
 	
@@ -58,6 +58,7 @@ public class IntcodeComputer implements Runnable {
 		this.support = new PropertyChangeSupport(this);
 	}
 	
+	@Override
 	public IntcodeComputerResult processOpcodes() {
 		parseInstructions();
 		return new IntcodeComputerResult(sequenceNumber, name, getResult(), output, terminated);
@@ -86,10 +87,12 @@ public class IntcodeComputer implements Runnable {
 		this.instructionPointer = 0L;
 	}
 
+	@Override
 	public void addInput(Long input) {
 		this.input.add(input);
 	}
 	
+	@Override
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
 		support.addPropertyChangeListener(listener);
 	}

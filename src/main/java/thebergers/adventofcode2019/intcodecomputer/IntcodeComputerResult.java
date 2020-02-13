@@ -1,5 +1,7 @@
 package thebergers.adventofcode2019.intcodecomputer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,12 +20,27 @@ public class IntcodeComputerResult {
 	
 	public IntcodeComputerResult(Integer sequenceNumber, String name, String result, List<Long> output, boolean terminated) {
 		this.sequenceNumber = sequenceNumber;
-		this.name =name; 
+		this.name = name;
 		this.result = result;
 		this.output = output;
 		this.terminated = terminated;
 	}
-	
+
+	public IntcodeComputerResult(Integer sequenceNumber, String name, String result, boolean terminated) {
+		this.sequenceNumber = sequenceNumber;
+		this.name = name;
+		this.result = result;
+		this.output = parseResult(result);
+		this.terminated = terminated;
+	}
+
+	private List<Long> parseResult(String resultStr) {
+		return Arrays.asList(resultStr.split(","))
+			.stream()
+			.map(item -> Long.parseLong(item))
+			.collect(Collectors.toList());
+	}
+
 	public Integer getSequenceNumber() {
 		return sequenceNumber;
 	}
@@ -35,6 +52,8 @@ public class IntcodeComputerResult {
 	public Long getOutput() {
 		return output.get(0);
 	}
+
+	public List<Long> getOutputAsList() { return output; }
 	
 	public String getAllOutput() {
 		return output.stream().map(val -> Long.toString(val)).collect(Collectors.joining(","));
@@ -70,7 +89,7 @@ public class IntcodeComputerResult {
 	}
 	
 	public String toString() {
-		return String.format("IntcodeComputerResult: seqNum=%d, name=%s, value = %d, terminated = %s",
+		return String.format("IntcodeComputerResult: seqNum=%d, name=%s, output=%s, terminated=%s",
 				sequenceNumber, name, output, terminated);
 	}
 }
