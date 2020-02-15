@@ -10,7 +10,7 @@ public class GravityCalculator {
 			.parallelStream()
 			.forEach(moon -> {
 				List<VelocityChange> velocityChanges = moons
-					.stream()
+					.parallelStream()
 					.filter(m -> !m.getName().equals(moon.getName()))
 					.map(m -> calculateVelocityChange(m, moon))
 					.collect(Collectors.toList());
