@@ -19,9 +19,9 @@ public class GravityCalculator {
 	}
 
 	private static VelocityChange calculateVelocityChange(Moon m1, Moon m2) {
-		VelocityAdjustment x = getVelocityAdjustment(m1.getPosition().getxPos(), m2.getPosition().getxPos());
-		VelocityAdjustment y = getVelocityAdjustment(m1.getPosition().getyPos(), m2.getPosition().getyPos());
-		VelocityAdjustment z = getVelocityAdjustment(m1.getPosition().getzPos(), m2.getPosition().getzPos());
+		VelocityAdjustment x = getVelocityAdjustment(m1.getX().getPosition(), m2.getX().getPosition());
+		VelocityAdjustment y = getVelocityAdjustment(m1.getY().getPosition(), m2.getY().getPosition());
+		VelocityAdjustment z = getVelocityAdjustment(m1.getZ().getPosition(), m2.getZ().getPosition());
 		return new VelocityChange(x, y, z);
 	}
 

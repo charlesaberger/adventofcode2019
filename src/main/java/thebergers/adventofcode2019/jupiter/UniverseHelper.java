@@ -23,12 +23,16 @@ public class UniverseHelper {
 			.replace(">", "")
 			.replace(" ", "");
 		String[] coordinates = moonInfo.split(",");
-		Integer x = getCoordinate(coordinates[0]);
-		Integer y = getCoordinate(coordinates[1]);
-		Integer z = getCoordinate(coordinates[2]);
+		Integer xPos = getCoordinate(coordinates[0]);
+		Integer yPos = getCoordinate(coordinates[1]);
+		Integer zPos = getCoordinate(coordinates[2]);
 		String name = String.format("Moon %d", index + 1);
-		Position position = new Position(x, y, z);
-		return new Moon(name, position, initialVelocity());
+		//Position position = new Position(x, y, z);
+		//return new Moon(name, position, initialVelocity());
+		Axis x = new Axis(xPos);
+		Axis y = new Axis(yPos);
+		Axis z = new Axis(zPos);
+		return new Moon(name, x, y, z);
 	}
 
 	private static Integer getCoordinate(String coordinateStr) {
