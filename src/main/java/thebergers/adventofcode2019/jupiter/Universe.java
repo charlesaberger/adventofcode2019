@@ -1,8 +1,13 @@
 package thebergers.adventofcode2019.jupiter;
 
+import static com.google.common.math.LongMath.gcd;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,38 +31,58 @@ public class Universe {
 		Long currentStep = 0L;
 		logMoons(currentStep);
 		while (currentStep < timeSteps) {
-			calculateNewState();
+			calculateNewState(Dimension.ALL);
 			currentStep++;
 			logMoons(currentStep);
 		}
 	}
 
-	public void calculateNewState() {
-		GravityCalculator.applyGravity(moons);
+	public void calculateNewState(Dimension dimension) {
+		GravityCalculator.applyGravity(moons, dimension);
 		moons
 			.parallelStream()
 			.forEach(Moon::applyVelocity);
 	}
 
 	public Long simulateAndCompare() {
-		Long steps = 0L;
+		Map<Dimension, Long> dimensions = new HashMap<>();
+		dimensions.put(Dimension.X_ONLY, 0L);
+		dimensions.put(Dimension.Y_ONLY, 0L);
+		dimensions.put(Dimension.Z_ONLY, 0L);
 		List<Moon> initialState = copyMoons();
-		logMoons("initialState", steps, initialState);
-		boolean statesMatch = false;
-		do {
-			steps++;
-			calculateNewState();
-			statesMatch = compareStates(initialState);
-			if (LOG.isDebugEnabled()) {
-				logMoons("initialState", steps, initialState);
-				logMoons("currentState", steps, moons);
-				LOG.debug("steps: {}, statesMatch: {}", steps, statesMatch);
-			}
-			if (steps % 5000 == 0) {
-				LOG.info("Steps: {}", steps);
-			}
-		} while(!statesMatch);
-		return steps;
+		dimensions
+			.entrySet()
+			.stream()
+			.sorted(Map.Entry.comparingByKey())
+			.forEach(dimensionEntry -> {
+			boolean statesMatch = false;
+			Dimension dimension = dimensionEntry.getKey();
+			Long steps = dimensionEntry.getValue();
+			logMoons("initialState", dimension, steps, initialState);
+			do {
+				steps++;
+				calculateNewState(dimension);
+				statesMatch = compareStates(initialState);
+				if (LOG.isDebugEnabled()) {
+					//logMoons("initialState", dimension, steps, initialState);
+					logMoons("currentState", dimension, steps, moons);
+					LOG.debug("dimension: {}, steps: {}, statesMatch: {}", dimension, steps, statesMatch);
+				}
+				if (steps % 5000 == 0) {
+					LOG.info("Dimension: {}, Steps: {}", dimension, steps);
+				}
+			} while (!statesMatch);
+			dimensions.put(dimension, steps);
+		});
+		return dimensions
+			.entrySet()
+			.stream()
+			.map(entry -> {
+				Long value = entry.getValue();
+				LOG.info("dimension: {}, steps: {}", entry.getKey(), value);
+				return value;
+			})
+			.reduce(1L, (product, value) -> product * (value / gcd(product, value)));
 	}
 
 	private boolean compareStates(List<Moon> initialState) {
@@ -81,9 +106,10 @@ public class Universe {
 			.parallelStream()
 			.map(m -> {
 				String name = m.getName();
-				Position newPos = new Position(m.getPosition().getxPos(), m.getPosition().getyPos(),
-					m.getPosition().getzPos());
-				return new Moon(name, newPos, UniverseHelper.initialVelocity());
+				Axis x = new Axis(m.getX().getPosition());
+				Axis y = new Axis(m.getY().getPosition());
+				Axis z = new Axis(m.getZ().getPosition());
+				return new Moon(name, x, y, z);
 			})
 			.collect(Collectors.toList());
 	}
@@ -95,8 +121,8 @@ public class Universe {
 			.forEach(moon -> LOG.debug("{}", moon));
 	}
 
-	private void logMoons(String text, Long currentStep, List<Moon> moonsToLog) {
-		LOG.debug("{}: Step {}", text, currentStep);
+	private void logMoons(String text, Dimension dimension, Long currentStep, List<Moon> moonsToLog) {
+		LOG.debug("{}: Dimension: {}, Step {}", text, dimension, currentStep);
 		moonsToLog
 			.stream()
 			.forEach(moon -> LOG.debug("{}", moon));

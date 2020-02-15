@@ -1,5 +1,7 @@
 package thebergers.adventofcode2019.jupiter;
 
+import java.util.Objects;
+
 public class Axis {
 
 	private Integer position;
@@ -34,5 +36,27 @@ public class Axis {
 
 	public void applyVelocity() {
 		position += velocity;
+	}
+
+	@Override
+	public String toString() {
+		return "Axis{" +
+			"position=" + position +
+			", velocity=" + velocity +
+			'}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Axis axis = (Axis) o;
+		return position.equals(axis.position) &&
+			velocity.equals(axis.velocity);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(position, velocity);
 	}
 }

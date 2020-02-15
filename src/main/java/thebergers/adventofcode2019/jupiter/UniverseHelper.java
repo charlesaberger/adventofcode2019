@@ -13,10 +13,6 @@ public class UniverseHelper {
 		return new Universe(moons);
 	}
 
-	public static Velocity initialVelocity() {
-		return new Velocity(0, 0, 0);
-	}
-
 	private static Moon createMoon(String moonInfo, Integer index) {
 		moonInfo = moonInfo
 			.replace("<", "")
@@ -27,8 +23,6 @@ public class UniverseHelper {
 		Integer yPos = getCoordinate(coordinates[1]);
 		Integer zPos = getCoordinate(coordinates[2]);
 		String name = String.format("Moon %d", index + 1);
-		//Position position = new Position(x, y, z);
-		//return new Moon(name, position, initialVelocity());
 		Axis x = new Axis(xPos);
 		Axis y = new Axis(yPos);
 		Axis z = new Axis(zPos);

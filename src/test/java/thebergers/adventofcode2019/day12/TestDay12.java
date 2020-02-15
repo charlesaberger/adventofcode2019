@@ -36,7 +36,7 @@ public class TestDay12 {
 
 	static Stream<Arguments> example1Arguments() {
 		return Stream.of(
-			//arguments(getMoon1(), 10, 179),
+			arguments(getMoon1(), 10, 179),
 			arguments(getMoon2(), 100, 1940)
 		);
 	}
